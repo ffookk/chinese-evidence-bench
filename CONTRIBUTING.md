@@ -2,7 +2,7 @@
 
 ## 提交一个清楚的小改动
 
-1. 从 ROADMAP.md 选择一个独立问题，说明预期结果。
+1. 从 [ROADMAP.md](ROADMAP.md) 选择一个独立问题，说明预期结果。
 2. 在新分支中完成改动，提交时使用清晰的 commit message。
 3. 提交 Pull Request，写明改动目的、来源、验证方式及局限。
 
