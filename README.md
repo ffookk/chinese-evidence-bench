@@ -17,6 +17,14 @@ python3 -m evidence_bench validate examples/synthetic.jsonl data/public-facts.js
 python3 -m unittest discover -s tests -v
 ```
 
+使用 `python3 -m evidence_bench validate --help` 查看校验参数。退出码可用于脚本判断结果：
+
+| 退出码 | 含义 |
+| --- | --- |
+| `0` | 校验通过，或正常显示帮助 |
+| `1` | 输入文件读取失败或案例校验未通过 |
+| `2` | 命令行参数错误 |
+
 命令支持 `.json` 案例数组与 `.jsonl` 逐行案例，可一次传入多个文件以检查跨文件重复 ID。`--as-of YYYY-MM-DD` 固定日期上限；`--require-reviewed` 排除待复核记录，`--real-only` 排除虚构记录。公开事实文件使用后两个开关通过；对虚构样例使用会按预期失败。`reviewed` 仅表示完成了批次说明中披露的复核，不自动意味着人工认证。
 
 校验通过只代表格式和状态组合合规，不能证明来源真实、事实正确或没有个人资料。工具不联网、不读取环境变量、不调用模型，也不保存输入或运行记录。完整口径见 [数据格式 v1](docs/data-format.md)，虚构材料及边界见 [样例说明](examples/README.md)。
