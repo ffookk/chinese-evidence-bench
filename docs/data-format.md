@@ -47,6 +47,7 @@
 - 来源数组会逐项检查；一条合格来源不会抵消同一案例内另一条来源的格式错误。
 - `insufficient_evidence` 或 `needs_clarification` 可以保留相关来源；这些来源仍须满足全部格式约束。
 - 即使定位类型为 `page` 或 `timestamp`，`evidence_locator.value` 也必须是字符串，而非数字。
+- 案例 `id` 不会自动去除首尾空格或改成小写；录入时直接使用规范要求的形式。
 
 ## 校验、入库与评测
 
