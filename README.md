@@ -4,7 +4,20 @@
 
 ## 当前状态
 
-仓库目前包含项目说明、路线图、贡献规范和 PR 模板。数据集、评测程序和模型实验尚未实现，没有已发布的评测分数。
+已实现 v1 案例数据规范、离线 JSON/JSONL 校验命令与标准库测试。仓库包含 3 条明确标记为 `synthetic` 的完全虚构格式样例，用来检查工具行为。**尚无真实基准案例、模型评测程序、模型实验或已发布的评测分数。**
+
+## 本地使用
+
+需要 Python 3.10+，无额外依赖；在仓库根目录运行：
+
+```sh
+python3 -m evidence_bench validate examples/synthetic.jsonl
+python3 -m unittest discover -s tests -v
+```
+
+命令支持 `.json` 案例数组与 `.jsonl` 逐行案例，可一次传入多个文件以检查跨文件重复 ID。`--as-of YYYY-MM-DD` 固定日期上限；`--require-reviewed` 排除待复核记录，`--real-only` 排除虚构记录。当前样例使用后两个开关会按预期失败。
+
+校验通过只代表格式和状态组合合规，不能证明来源真实、事实正确或没有个人资料。工具不联网、不读取环境变量、不调用模型，也不保存输入或运行记录。完整口径见 [数据格式 v1](docs/data-format.md)，虚构材料及边界见 [样例说明](examples/README.md)。
 
 ## 要解决的问题
 
@@ -18,22 +31,21 @@
 
 具体工作和验收条件见 [ROADMAP.md](ROADMAP.md)。
 
-## 建议的数据字段
+## 案例数据字段
 
 | 字段 | 含义 |
 | --- | --- |
 | `id` | 稳定且唯一的案例标识 |
+| `schema_version` / `synthetic` | 格式版本及是否为完全虚构样例 |
 | `question` | 中文问题及必要上下文 |
-| `reference_answer` | 经证据支持的参考答案 |
-| `source_url` | 可追溯的原始来源 |
-| `source_title` | 来源标题或文档名称 |
-| `evidence_locator` | 支持答案的章节、页码或段落位置 |
+| `reference_answer` | 证据充分时的参考答案；证据不足或需要澄清时为 `null` |
+| `evidence` | 来源数组，每项包含 `source_url`、`source_title`、`evidence_locator` |
 | `verified_at` | 最近一次人工核验日期 |
-| `valid_as_of` | 涉及时效性事实时，答案适用的日期 |
+| `time_sensitive` / `valid_as_of` | 是否涉及时效性事实，以及答案适用的日期 |
 | `answerability` | 有充分证据、证据不足或需要澄清 |
 | `review_status` | 待复核或已复核 |
 
-这些字段是设计草案，正式 schema 和校验器待后续 PR 确定。引用定位应足够精确，避免无必要地复制受版权保护的整篇内容。
+所有字段必须出现，可为空的值使用 `null`。具体类型、状态值、日期和来源约束以 [数据格式 v1](docs/data-format.md) 为准。引用定位应足够精确，避免无必要地复制受版权保护的整篇内容。
 
 ## 评估维度
 
