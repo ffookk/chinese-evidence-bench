@@ -23,3 +23,5 @@
 ## 自动检查
 
 提交前阅读 [隐私检查说明](docs/privacy.md)，运行项目 README 中的验证命令及 `python3 scripts/privacy_check.py --history`。PR 的 Checks 工作流会执行隐私检查、单元测试和文档中的虚构示例。
+
+`main` 当前要求通过 PR 合并，并通过 `validate` 检查；管理员也适用。请在工作分支提交，禁止强制推送或删除主分支。自动检查不替代事实、隐私和使用效果审阅。

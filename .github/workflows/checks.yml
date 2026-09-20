@@ -25,5 +25,7 @@ jobs:
         run: python scripts/privacy_check.py --history
       - name: Unit tests
         run: python -m unittest discover -s tests -v
-      - name: Validate documented synthetic example
-        run: python -m evidence_bench validate examples/synthetic.jsonl
+      - name: Validate documented examples
+        run: python -m evidence_bench validate examples/synthetic.jsonl data/public-facts.jsonl
+      - name: Require reviewed real cases
+        run: python -m evidence_bench validate data/public-facts.jsonl --real-only --require-reviewed
