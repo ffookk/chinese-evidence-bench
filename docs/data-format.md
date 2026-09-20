@@ -41,6 +41,7 @@
 ## 编辑时的类型检查
 
 - `schema_version` 写整数 `1`；`1.0`、`true` 或字符串 `"1"` 都不能代替它。
+- `synthetic` 和 `time_sensitive` 使用 JSON 布尔值 `true` / `false`，不能使用 `0` / `1` 或字符串。
 
 ## 校验、入库与评测
 
