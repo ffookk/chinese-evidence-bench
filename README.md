@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-已实现 v1 案例数据规范、离线 JSON/JSONL 校验命令与标准库测试。仓库包含 3 条明确标记为 `synthetic` 的完全虚构格式样例，用来检查工具行为。**尚无真实基准案例、模型评测程序、模型实验或已发布的评测分数。**
+已实现 v1 案例数据规范、离线 JSON/JSONL 校验命令与标准库测试。仓库包含 **8 条公开事实案例**（5 份原始文件，见 [来源复核说明](docs/source-review.md)），另有 3 条标记为 `synthetic` 的完全虚构格式样例。真实案例由本轮 AI 代理打开原文逐条核对，**尚未经独立人工认证，也没有模型评测程序、模型实验或已发布的评测分数。**
 
 ## 本地使用
 
@@ -12,10 +12,12 @@
 
 ```sh
 python3 -m evidence_bench validate examples/synthetic.jsonl
+python3 -m evidence_bench validate data/public-facts.jsonl --real-only --require-reviewed
+python3 -m evidence_bench validate examples/synthetic.jsonl data/public-facts.jsonl
 python3 -m unittest discover -s tests -v
 ```
 
-命令支持 `.json` 案例数组与 `.jsonl` 逐行案例，可一次传入多个文件以检查跨文件重复 ID。`--as-of YYYY-MM-DD` 固定日期上限；`--require-reviewed` 排除待复核记录，`--real-only` 排除虚构记录。当前样例使用后两个开关会按预期失败。
+命令支持 `.json` 案例数组与 `.jsonl` 逐行案例，可一次传入多个文件以检查跨文件重复 ID。`--as-of YYYY-MM-DD` 固定日期上限；`--require-reviewed` 排除待复核记录，`--real-only` 排除虚构记录。公开事实文件使用后两个开关通过；对虚构样例使用会按预期失败。`reviewed` 仅表示完成了批次说明中披露的复核，不自动意味着人工认证。
 
 校验通过只代表格式和状态组合合规，不能证明来源真实、事实正确或没有个人资料。工具不联网、不读取环境变量、不调用模型，也不保存输入或运行记录。完整口径见 [数据格式 v1](docs/data-format.md)，虚构材料及边界见 [样例说明](examples/README.md)。
 
@@ -40,7 +42,7 @@ python3 -m unittest discover -s tests -v
 | `question` | 中文问题及必要上下文 |
 | `reference_answer` | 证据充分时的参考答案；证据不足或需要澄清时为 `null` |
 | `evidence` | 来源数组，每项包含 `source_url`、`source_title`、`evidence_locator` |
-| `verified_at` | 最近一次人工核验日期 |
+| `verified_at` | 最近一次证据复核日期；执行方式和范围见批次说明 |
 | `time_sensitive` / `valid_as_of` | 是否涉及时效性事实，以及答案适用的日期 |
 | `answerability` | 有充分证据、证据不足或需要澄清 |
 | `review_status` | 待复核或已复核 |
