@@ -46,6 +46,7 @@
 - 对象字段的排列顺序不影响校验；保留全部必填字段比复制某个固定顺序更重要。
 - 来源数组会逐项检查；一条合格来源不会抵消同一案例内另一条来源的格式错误。
 - `insufficient_evidence` 或 `needs_clarification` 可以保留相关来源；这些来源仍须满足全部格式约束。
+- 即使定位类型为 `page` 或 `timestamp`，`evidence_locator.value` 也必须是字符串，而非数字。
 
 ## 校验、入库与评测
 
