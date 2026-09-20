@@ -1,30 +1,30 @@
-# 路线图
+# Roadmap
 
-已完成事项勾选如下。虚构格式样例不计入真实基准数据数量；模型评测与实验仍未实现。
+Completed items are checked below. Fictional format fixtures do not count as real benchmark data. Model evaluation and experiments remain unimplemented. Published fixtures are in English and do not provide Chinese-language evaluation coverage.
 
-## PR 1：数据格式与首批案例
+## PR 1: Data format and initial cases
 
-- [x] 确定 JSON/JSONL 数据规范、唯一标识、来源定位和时效性字段（见 [数据格式 v1](docs/data-format.md)）。
-- [x] 编写能发现缺失字段、重复标识、非法日期和矛盾复核状态的离线校验器。
-- [x] 加入 3 条完全虚构的格式样例及有针对性的标准库测试。
-- [x] 加入 8 条代理核对原文的公开事实案例、逐条来源复核说明，以及真实已复核入库门槛和跨文件 ID 检查。
-- [ ] 对首批 8 条进行独立人工复核；目前 `reviewed` 为代理复核，非人工认证。
-- [ ] 逐批加入并复核 30 个中文问题，包含证据充分与证据不足的情形。
+- [x] Define the JSON/JSONL format, unique identifiers, source locations, and time-related fields (see the [v1 data format](docs/data-format.md)).
+- [x] Build an offline validator that detects missing fields, duplicate identifiers, invalid dates, and contradictory review states.
+- [x] Add 3 entirely fictional format fixtures and focused standard-library tests.
+- [x] Add 8 public-fact cases checked against original sources by an agent, individual source-review notes, a real, reviewed-case gate, and cross-file ID checks.
+- [ ] Independently review the first 8 cases with a human reviewer; their current `reviewed` state reflects agent review, not human certification.
+- [ ] Build 30 independently reviewed real evidence cases with English questions and answers, including sufficient- and insufficient-evidence cases. Any future Chinese-language evaluation must use separately reviewed local translations outside version control unless the public language policy changes; current English fixtures do not establish that coverage.
 
-验收：每个案例都能定位到支持答案的原始证据；校验器可发现实际的数据错误；复核状态明确。
+Acceptance: each answer can be traced to supporting original evidence; the validator detects actual data errors; review states are explicit.
 
-## PR 2：可重复评测
+## PR 2: Reproducible evaluation
 
-- [ ] 保存模型标识、输入、输出、运行参数与时间。
-- [ ] 分别定义事实错误、引用错误、正确拒答和不必要拒答。
-- [ ] 报告回答覆盖率，并公开人工判分规则和边界案例。
+- [ ] Save model identifiers, inputs, outputs, run parameters, and timestamps.
+- [ ] Define factual errors, citation errors, correct refusals, and unnecessary refusals separately.
+- [ ] Report answer coverage and publish human scoring rules and edge cases.
 
-验收：另一位贡献者可以从保存的运行记录重新计算相同结果；不能把模型随机生成的可重复性与评分可复算性混为一谈。
+Acceptance: another contributor can recalculate the same scores from saved run records. Distinguish reproducible scoring from reproducibility of stochastic model generation.
 
-## PR 3：一个改进实验
+## PR 3: An improvement experiment
 
-- [ ] 在同一测试集和评分口径下比较加入检索前后的表现。
-- [ ] 保存检索到的来源定位及当时的证据版本线索。
-- [ ] 同时报告质量、覆盖率和成本，记录未改善的案例。
+- [ ] Compare performance with and without retrieval on the same test set and scoring rules.
+- [ ] Save retrieved source locations and evidence-version information available at the time.
+- [ ] Report quality, coverage, and cost together, including cases that did not improve.
 
-验收：实验结论能追溯到逐例结果，并明确样本量、适用范围和误差来源。
+Acceptance: experimental conclusions are traceable to individual case results, with sample size, scope, and sources of error stated explicitly.

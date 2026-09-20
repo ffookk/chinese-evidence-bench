@@ -1,15 +1,15 @@
-# 完全虚构的格式样例
+# Entirely fictional format fixtures
 
-`synthetic.jsonl` 只有 3 条为开发工具创作的格式夹具，**不是现实事实、真实基准数据、人工评测结果或真实核验记录**。样例中的资料站、规则、日期和核验状态全部虚构，日期与状态只用于覆盖格式分支。所有来源都用保留的 `.invalid` 域名，无法作为在线来源访问。
+`synthetic.jsonl` contains only 3 format fixtures created for tool development. **They are not real-world facts, real benchmark data, human evaluation results, or records of actual verification.** The information station, rules, dates, and review states are fictional. Dates and states exercise format branches only. Every source uses a reserved `.invalid` domain and cannot be accessed as an online source. The fixtures are published in English and do not establish Chinese-language evaluation coverage.
 
-在仓库根目录运行 `python3 -m evidence_bench validate examples/synthetic.jsonl --as-of 2026-01-31`，可用固定日期上限检查这些样例。
+From the repository root, run `python3 -m evidence_bench validate examples/synthetic.jsonl --as-of 2026-01-31` to check these fixtures using a fixed date cutoff.
 
-供前两条案例定位的完整虚构规则只有以下一段：
+The complete fictional rule referenced by the first two cases is this single paragraph:
 
-> 虚构规则第 1 段：从 2026 年 1 月 10 日起，纸月资料站的每套测试盒包含三个木制圆片。
+> Fictional rule, paragraph 1: From January 10, 2026, each test kit at the fictional Paper Moon information station contains three wooden discs.
 
-第一条示范带定位的候选参考答案以及 `reviewed` 状态；第二条示范“没有材料支持”的待复核状态，不能从规则未提及金属盒推断从未制造金属盒；第三条示范问题指代不清、需要澄清，不能补造参考答案。
+The first case demonstrates a candidate reference answer with an evidence locator and a `reviewed` state. The second demonstrates a pending insufficient-evidence case: the rule's silence about metal kits does not prove that none were ever made. The third demonstrates an unclear reference requiring clarification; do not invent a reference answer.
 
-修改格式样例前可查阅 [字段与来源约束](../docs/data-format.md)。
+Before editing these fixtures, consult the [field and source constraints](../docs/data-format.md).
 
-不要将本目录复制到真实数据目录并改成 `synthetic: false`。真实案例必须独立采集来源、审查个人资料和再分发许可、完成人工核验。
+Do not copy this directory into the real-data directory and change `synthetic` to `false`. Real cases require independently collected sources, review of personal information and redistribution permissions, and completed human verification.

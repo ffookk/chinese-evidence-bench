@@ -1,28 +1,32 @@
-# 贡献指南
+# Contributing
 
-## 提交一个清楚的小改动
+## Make a clear, focused change
 
-1. 从 [ROADMAP.md](ROADMAP.md) 选择一个独立问题，说明预期结果。
-2. 在新分支中完成改动，提交时使用清晰的 commit message。
-3. 提交 Pull Request，写明改动目的、来源、验证方式及局限。
+1. Choose one independent task from [ROADMAP.md](ROADMAP.md) and describe its expected result.
+2. Make changes on a new branch and use a clear commit message.
+3. Open a pull request describing the purpose, sources, validation, and limitations.
 
-## 证据与数据
+Use English for public documentation, fixtures, comments, issues, discussions, PRs, commit messages, and release notes. Preserve identifiers, source URLs, and technical notation. Published English fixtures do not count as Chinese-language evaluation coverage.
 
-- 事实记录尽量引用官方文件、原始数据或原始研究，保留准确位置和核验日期。
-- 明确区分来源陈述、作者推断、待核实信息和实验结果。
-- 涉及时效性内容时注明适用时间，更新时保留必要的更正说明。
-- 不把聊天记录或 AI 回答本身当作事实已获验证的依据。
-- 导入外部内容前检查许可及再分发条件，优先保留链接和必要的最少摘录。
+## Evidence and data
 
-## 隐私与验证
+- Prefer official documents, original data, or original research for factual records. Retain precise evidence locations and review dates.
+- Distinguish source statements, author inferences, unverified information, and experimental results.
+- State the applicable date for time-sensitive material and retain necessary correction notes when updating it.
+- Do not treat conversation transcripts or AI answers as proof that facts have been verified.
+- Check licensing and redistribution conditions before importing external material. Prefer links and the minimum necessary excerpts.
 
-- 使用虚构或可合法公开的样例，不提交 API 密钥、凭据、真实家庭联系方式或私密对话。
-- 数据改动应能追溯并复核；代码改动应附适合该功能的运行说明和验证结果。
-- 新增公开事实时同步更新 `docs/source-review.md`，保留对应案例 ID 和来源 URL，供现有数据测试核对复核轨迹。
-- 尚未实现或验证的内容明确标记，不把计划写成已完成成果。
+## Privacy and validation
 
-## 自动检查
+- Use fictional or lawfully public examples. Do not submit API keys, credentials, real household contact details, or private conversations.
+- Data changes should be traceable and reviewable. Code changes should include suitable usage instructions and validation results.
+- When adding public facts, update `docs/source-review.md` with the corresponding case IDs and source URLs so that the existing data tests can check the review trail.
+- Clearly identify work that has not been implemented or verified; do not present plans as completed results.
 
-提交前阅读 [隐私检查说明](docs/privacy.md)，运行项目 README 中的验证命令及 `python3 scripts/privacy_check.py --history`。PR 的 Checks 工作流会执行隐私检查、单元测试、虚构与公开案例校验，以及真实已复核案例门槛检查。
+## Automated checks
 
-`main` 当前要求通过 PR 合并，并通过 `validate` 检查；管理员也适用。请在工作分支提交，禁止强制推送或删除主分支。自动检查不替代事实、隐私和使用效果审阅。
+Before submitting, read the [privacy notes](docs/privacy.md), run the validation commands in the README, and run `python3 scripts/privacy_check.py --history`. The PR Checks workflow runs the privacy check, unit tests, synthetic and public-case validation, and the real, reviewed-case gate.
+
+`main` requires a pull request and a passing `validate` check, including for administrators. Commit on a working branch; force pushes and deletion of the main branch are prohibited. Automated checks do not replace review of facts, privacy, or practical results.
+
+Run `python3 scripts/check_english.py` after staging changes. CI checks current tracked text, including decoded JSON values, for CJK scripts. This guard is not a general language classifier; manually review all public wording and GitHub collaboration text for English. Historical revisions are outside this check.
