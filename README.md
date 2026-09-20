@@ -1,14 +1,16 @@
 # Chinese Evidence Bench
 
-中文 AI 事实与引用核验：建立带原始证据的中文问答测试集，分别评估事实正确性、引用支持程度与拒答行为。
+Tools for checking factual accuracy, citation support, and refusal behavior in AI answers, with a long-term focus on Chinese-language evaluation backed by original evidence.
 
-## 当前状态
+## Current status
 
-已实现 v1 案例数据规范、离线 JSON/JSONL 校验命令与标准库测试。仓库包含 **8 条公开事实案例**（5 份原始文件，见 [来源复核说明](docs/source-review.md)），另有 3 条标记为 `synthetic` 的完全虚构格式样例。真实案例由本轮 AI 代理打开原文逐条核对，**尚未经独立人工认证，也没有模型评测程序、模型实验或已发布的评测分数。**
+The repository implements a v1 case format, an offline JSON/JSONL validator, and standard-library tests. It contains **8 public-fact cases** drawn from 5 original documents (see the [source review](docs/source-review.md)), plus 3 entirely fictional fixtures marked `synthetic`. An AI agent opened the original sources and checked the public cases individually. **There has been no independent human certification, model evaluation runner, model experiment, or published evaluation score.**
 
-## 本地使用
+Published questions, answers, and documentation are in English. These English-language fixtures do not establish Chinese-language evaluation coverage; the validator accepts Unicode text without detecting its language. Future Chinese-language evaluation should use locally translated inputs kept outside version control unless the public language policy changes. Translations need their own review; their existence alone does not establish evaluation coverage.
 
-需要 Python 3.10+，无额外依赖；在仓库根目录运行：
+## Local usage
+
+Python 3.10+ is required, with no additional dependencies. Run from the repository root:
 
 ```sh
 python3 -m evidence_bench validate examples/synthetic.jsonl
@@ -17,64 +19,64 @@ python3 -m evidence_bench validate examples/synthetic.jsonl data/public-facts.js
 python3 -m unittest discover -s tests -v
 ```
 
-使用 `python3 -m evidence_bench validate --help` 查看校验参数。退出码可用于脚本判断结果：
+Use `python3 -m evidence_bench validate --help` to view validation options. Scripts can use these exit codes:
 
-| 退出码 | 含义 |
+| Exit code | Meaning |
 | --- | --- |
-| `0` | 校验通过，或正常显示帮助 |
-| `1` | 输入文件读取失败或案例校验未通过 |
-| `2` | 命令行参数错误 |
+| `0` | Validation passed, or help was displayed normally |
+| `1` | An input file could not be read, or case validation failed |
+| `2` | Invalid command-line arguments |
 
-命令支持 `.json` 案例数组与 `.jsonl` 逐行案例，可一次传入多个文件以检查跨文件重复 ID。`--as-of YYYY-MM-DD` 固定日期上限；`--require-reviewed` 排除待复核记录，`--real-only` 排除虚构记录。公开事实文件使用后两个开关通过；对虚构样例使用会按预期失败。`reviewed` 仅表示完成了批次说明中披露的复核，不自动意味着人工认证。
+The command accepts `.json` arrays of cases and `.jsonl` files with one case per line. Pass multiple files to check for duplicate IDs across files. `--as-of YYYY-MM-DD` fixes the date cutoff; `--require-reviewed` excludes pending records, and `--real-only` excludes synthetic records. The public-fact file passes the latter two options; the fictional fixtures fail them as expected. `reviewed` means only that the review disclosed in the batch notes was completed; it does not imply human certification.
 
-校验通过只代表格式和状态组合合规，不能证明来源真实、事实正确或没有个人资料。工具不联网、不读取环境变量、不调用模型，也不保存输入或运行记录。完整口径见 [数据格式 v1](docs/data-format.md)，虚构材料及边界见 [样例说明](examples/README.md)。
+Passing validation establishes only that the format and state combinations are valid. It does not prove source authenticity, factual correctness, or the absence of personal information. The tool does not access the network, read environment variables, call models, or save inputs or run logs. See the [v1 data format](docs/data-format.md) and [fixture notes](examples/README.md) for the complete rules and limitations.
 
-更多输入与命令说明见 [输入与诊断速查](docs/usage-notes.md)。
+See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 
-## 要解决的问题
+## Problem
 
-模型可能给出错误事实、编造来源，或引用一个真实但不能支持结论的页面。单一的“答对率”无法区分这些问题。本项目计划保存问题、答案、原始证据、核验日期和证据位置，使案例能够复核、评测能够复现。
+Models may produce incorrect facts, invent sources, or cite real pages that do not support their claims. A single accuracy score cannot distinguish these failures. The project plans to retain questions, answers, original evidence, review dates, and evidence locations so that cases can be reviewed and evaluations reproduced.
 
-## 首期范围
+## Initial scope
 
-1. 定义数据格式，并逐步完成首批 30 个有可靠证据的中文问题。
-2. 保存模型版本、完整输入、原始回答及运行设置，建立可重复的评测流程。
-3. 比较同一批问题在加入检索前后的表现，报告质量、回答覆盖率与成本。
+1. Define the data format and build 30 independently reviewed, reliably sourced evidence cases, with questions and answers published in English.
+2. Record model versions, complete inputs, raw answers, and run settings to establish a repeatable evaluation process.
+3. Compare results on the same questions with and without retrieval, reporting quality, answer coverage, and cost.
 
-具体工作和验收条件见 [ROADMAP.md](ROADMAP.md)。
+See [ROADMAP.md](ROADMAP.md) for tasks and acceptance criteria.
 
-## 案例数据字段
+## Case fields
 
-| 字段 | 含义 |
+| Field | Meaning |
 | --- | --- |
-| `id` | 稳定且唯一的案例标识 |
-| `schema_version` / `synthetic` | 格式版本及是否为完全虚构样例 |
-| `question` | 中文问题及必要上下文 |
-| `reference_answer` | 证据充分时的参考答案；证据不足或需要澄清时为 `null` |
-| `evidence` | 来源数组，每项包含 `source_url`、`source_title`、`evidence_locator` |
-| `verified_at` | 最近一次证据复核日期；执行方式和范围见批次说明 |
-| `time_sensitive` / `valid_as_of` | 是否涉及时效性事实，以及答案适用的日期 |
-| `answerability` | 有充分证据、证据不足或需要澄清 |
-| `review_status` | 待复核或已复核 |
+| `id` | Stable, unique case identifier |
+| `schema_version` / `synthetic` | Format version and whether the case is entirely fictional |
+| `question` | Question and necessary context; published fixtures use English |
+| `reference_answer` | Reference answer when evidence is sufficient; `null` when evidence is insufficient or clarification is required |
+| `evidence` | Sources, each with `source_url`, `source_title`, and `evidence_locator` |
+| `verified_at` | Most recent evidence review date; the method and scope are disclosed in the batch notes |
+| `time_sensitive` / `valid_as_of` | Whether the answer depends on time, and its applicable date |
+| `answerability` | Sufficient evidence, insufficient evidence, or clarification required |
+| `review_status` | Pending or reviewed |
 
-所有字段必须出现，可为空的值使用 `null`。具体类型、状态值、日期和来源约束以 [数据格式 v1](docs/data-format.md) 为准。引用定位应足够精确，避免无必要地复制受版权保护的整篇内容。
+All fields are required. Use `null` for nullable values. The [v1 data format](docs/data-format.md) defines types, states, dates, and source constraints. Evidence locations should be precise enough for review without unnecessarily copying copyrighted material in full.
 
-## 评估维度
+## Evaluation dimensions
 
-- **事实正确性**：回答中的可核验陈述是否与证据一致。
-- **引用支持程度**：引用是否存在，且确实支持对应陈述。
-- **拒答行为**：证据不足时是否恰当拒答；证据充分时是否不必要地拒答。
-- **回答覆盖率**：有效回答比例，需与质量指标同时呈现。
-- **实验成本**：报告适用的时间、token 或费用口径及计算方式。
+- **Factual accuracy:** whether verifiable claims agree with the evidence.
+- **Citation support:** whether citations exist and support their associated claims.
+- **Refusal behavior:** whether the model appropriately declines when evidence is insufficient, or unnecessarily declines when it is sufficient.
+- **Answer coverage:** the proportion of valid answers, reported alongside quality metrics.
+- **Experiment cost:** the applicable time, token, or monetary measures and their calculation methods.
 
-评分口径、分母和边界案例应在实验前确定；不能以增加拒答来掩盖质量问题。
+Define scoring rules, denominators, and edge cases before running experiments. Increased refusal must not conceal quality problems.
 
-## 参考项目
+## Reference project
 
-- [HaluEval](https://github.com/RUCAIBox/HaluEval)：来自前期讨论的评测参考线索。
+- [HaluEval](https://github.com/RUCAIBox/HaluEval): a potential evaluation reference identified during initial planning.
 
-该链接不表示本仓库已经导入或验证其数据。采用外部资料前需检查适用范围、许可和来源。
+This link does not mean its data has been imported or verified here. Check scope, licensing, and provenance before using external material.
 
-## 参与方式
+## Contributing
 
-从一个可复核的小改动开始，遵循 [CONTRIBUTING.md](CONTRIBUTING.md)，并使用仓库的 PR 模板。真实账号信息、API 密钥、私密对话和个人资料不应进入样例或提交历史。
+Start with a small, reviewable change, follow [CONTRIBUTING.md](CONTRIBUTING.md), and use the repository's PR template. Keep public contributions in English. Real account details, API keys, private conversations, and personal records must not enter fixtures or commit history.

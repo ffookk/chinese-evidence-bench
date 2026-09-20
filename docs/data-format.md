@@ -1,55 +1,55 @@
-# 案例数据格式 v1
+# Case data format v1
 
-本规范是当前校验器的权威口径。仅使用 Python 3.10+ 标准库，不安装依赖，不联网。
+This specification defines the current validator's rules. The validator uses only the Python 3.10+ standard library, with no additional dependencies or network access.
 
-## 文件与字段
+## Files and fields
 
-输入为 UTF-8：`.json` 顶层必须是案例数组，`.jsonl` 每个非空行是一条案例对象；允许 JSONL 空行。每个输入文件至少包含一条可读案例。JSON 重复键、`NaN`、`Infinity`、未知字段均报错。一次命令传入的所有文件合在一起检查 `id` 唯一性。
+Inputs use UTF-8. A `.json` file must contain a top-level array of cases; each nonempty line in a `.jsonl` file must contain one case object. Blank JSONL lines are allowed. Every input file must contain at least one readable case. Duplicate JSON keys, `NaN`, `Infinity`, and unknown fields are errors. IDs are checked for uniqueness across all files passed to one command.
 
-每条案例必须有下列全部字段；允许为空的字段必须显式写 `null`，不能省略。
+Every case must include all fields below. Nullable fields must explicitly use `null`; they cannot be omitted.
 
-| 字段 | 格式及含义 |
+| Field | Format and meaning |
 | --- | --- |
-| `schema_version` | 整数 `1` |
-| `id` | 3–64 位小写 ASCII 字母、数字、`_` 或 `-`，首位是字母；不得填身份、账号或联系方式 |
-| `synthetic` | 布尔值；虚构案例必须为 `true`，不能作为真实基准数据 |
-| `question` | 非空字符串；约定用中文，程序不猜测自然语言 |
-| `reference_answer` | `supported` 时为非空答案，其他状态必须为 `null` |
-| `evidence` | 来源对象数组；`supported` 时至少一个，其他状态可为空 |
-| `time_sensitive` | 布尔值，表示答案是否依赖时间 |
-| `valid_as_of` | 有时效性时必填 `YYYY-MM-DD`；其他情况为 `null` |
-| `verified_at` | `reviewed` 时必填最近一次证据复核日期；`pending` 时必须为 `null`；复核执行方式和范围见批次说明 |
+| `schema_version` | Integer `1` |
+| `id` | 3–64 lowercase ASCII letters, digits, `_`, or `-`, starting with a letter; do not use identity, account, or contact details |
+| `synthetic` | Boolean; fictional cases must use `true` and cannot count as real benchmark data |
+| `question` | Nonempty string; published fixtures use English, and the program does not detect natural language |
+| `reference_answer` | Nonempty answer for `supported`; must be `null` for other states |
+| `evidence` | Array of source objects; at least one for `supported`, otherwise optionally empty |
+| `time_sensitive` | Boolean indicating whether the answer depends on time |
+| `valid_as_of` | Required `YYYY-MM-DD` for time-sensitive cases; otherwise `null` |
+| `verified_at` | Required date of the most recent evidence review for `reviewed`; must be `null` for `pending`; the batch notes disclose the review method and scope |
 | `answerability` | `supported` / `insufficient_evidence` / `needs_clarification` |
 | `review_status` | `pending` / `reviewed` |
 
-`answerability` 和 `review_status` 独立：`supported` + `pending` 表示作者提出了一个带来源的候选答案，仍待复核。`reviewed` + `insufficient_evidence` 表示复核后的证据不足判断，不能解释为已经证明某个答案。证据不足或问题不清时，空证据数组获准通过格式检查，仍须人工审查判断理由与检索范围。
+`answerability` and `review_status` are independent. `supported` + `pending` means the author has proposed a sourced candidate answer awaiting review. `reviewed` + `insufficient_evidence` means the review concluded that evidence is insufficient; it does not establish an answer. Empty evidence arrays are structurally valid for insufficient-evidence or unclear questions, but the reasoning and search scope still require human review.
 
-`reviewed` 表示完成批次说明所披露的来源支持复核，不能单凭标记推断执行者为人类。每批真实数据须在说明中写清由人工还是 AI 代理核对、日期、证据位置及范围局限；未经独立人工复核不得宣传为人工认证。首批公开事实见 [来源复核说明](source-review.md)。这是对文档复核口径的明确说明，JSON v1 字段与校验逻辑不变。
+`reviewed` means the source-support review disclosed in the batch notes was completed. The label alone does not establish that a human performed it. Each real-data batch must state whether a human or AI agent checked it, the date, evidence locations, and scope limitations. Do not claim human certification without independent human review. See the [initial source review](source-review.md). This clarifies the documentation's review terminology; the JSON v1 fields and validation logic are unchanged.
 
-每个来源对象必须且只能包含：
+Each source object must contain exactly these fields:
 
-| 字段 | 格式及含义 |
+| Field | Format and meaning |
 | --- | --- |
-| `source_url` | HTTPS URL；不得有用户信息、查询参数、片段、反斜杠、空白或非 443 端口。需要锚点的信息写入定位字段。域名使用合法 ASCII 标签（国际化域名需用 Punycode）。虚构案例只允许 `.invalid` 子域名；真实案例使用带点的域名，拒绝 IP 地址、`localhost`、`.local`、`.invalid`、`.test`、`.example`，以及 `example.com` / `example.org` / `example.net` 及其子域名 |
-| `source_title` | 非空来源标题 |
-| `evidence_locator` | 对象，且只能含 `type`、`value` 两个字段 |
+| `source_url` | HTTPS URL without user information, query parameters, fragments, backslashes, whitespace, or a port other than 443. Put anchor information in the locator field. Hostnames use valid ASCII labels; internationalized names require Punycode. Synthetic cases may use only subdomains of `.invalid`. Real cases require dotted hostnames and reject IP addresses, `localhost`, `.local`, `.invalid`, `.test`, `.example`, and `example.com` / `example.org` / `example.net`, including their subdomains |
+| `source_title` | Nonempty source title |
+| `evidence_locator` | Object containing exactly `type` and `value` |
 
-`evidence_locator.type` 为 `paragraph`、`page`、`section`、`table` 或 `timestamp`；`value` 为非空字符串，例如 `第 2 节，第 3 段`。校验器只保证定位存在；位置能否定位、是否精确以及是否支持答案都需实际打开来源核对，并在批次说明披露复核方式。来源 URL 不得包含访问凭据、跟踪参数或个人资料；有参数的原始网页应先整理为可公开的稳定来源。
+`evidence_locator.type` is `paragraph`, `page`, `section`, `table`, or `timestamp`. Its `value` is a nonempty string, such as `Section 2, paragraph 3`. The validator checks only that a locator exists. Open the source to assess whether the location is usable, precise, and supports the answer, then disclose the review method in the batch notes. Source URLs must not contain access credentials, tracking parameters, or personal information. Convert parameterized source links to stable, publicly shareable URLs first.
 
-日期必须是严格的 ISO 日历日期，例如 `2026-01-15`；拒绝不存在的日期、缺少补零、时间戳和未来日期。未来的基准由本机当天日期决定，可用 `--as-of YYYY-MM-DD` 固定以便重现。若同时提供两个日期，`verified_at` 不能早于 `valid_as_of`。这套格式用于回顾已核验事实，不覆盖未来预测。
+Dates must be strict ISO calendar dates, such as `2026-01-15`. Impossible dates, missing zero padding, timestamps, and future dates are rejected. The future-date cutoff defaults to the local current date; use `--as-of YYYY-MM-DD` for a fixed, reproducible cutoff. When both dates are present, `verified_at` cannot precede `valid_as_of`. This format describes previously reviewed facts, not future predictions.
 
-## 编辑时的类型检查
+## Type checks while editing
 
-- `schema_version` 写整数 `1`；`1.0`、`true` 或字符串 `"1"` 都不能代替它。
-- `synthetic` 和 `time_sensitive` 使用 JSON 布尔值 `true` / `false`，不能使用 `0` / `1` 或字符串。
-- 非空文本字段不能只填空格、制表符或换行；当前校验用去除首尾空白后的内容判断是否为空。
-- 对象字段的排列顺序不影响校验；保留全部必填字段比复制某个固定顺序更重要。
-- 来源数组会逐项检查；一条合格来源不会抵消同一案例内另一条来源的格式错误。
-- `insufficient_evidence` 或 `needs_clarification` 可以保留相关来源；这些来源仍须满足全部格式约束。
-- 即使定位类型为 `page` 或 `timestamp`，`evidence_locator.value` 也必须是字符串，而非数字。
-- 案例 `id` 不会自动去除首尾空格或改成小写；录入时直接使用规范要求的形式。
+- Write `schema_version` as integer `1`; `1.0`, `true`, and string `"1"` are not substitutes.
+- Use JSON booleans `true` / `false` for `synthetic` and `time_sensitive`, not `0` / `1` or strings.
+- Required nonempty text cannot consist only of spaces, tabs, or newlines. The current check tests emptiness after stripping leading and trailing whitespace.
+- Object-field order does not affect validation. Retaining every required field matters more than copying a particular order.
+- Every source in an array is checked. One valid source does not cancel another source's format error in the same case.
+- `insufficient_evidence` and `needs_clarification` may retain relevant sources, which must still satisfy every format constraint.
+- `evidence_locator.value` must be a string, even for locator types `page` and `timestamp`.
+- Case IDs are not automatically trimmed or converted to lowercase. Enter them in the required form.
 
-## 校验、入库与评测
+## Validation, admission, and evaluation
 
 ```sh
 python3 -m evidence_bench validate examples/synthetic.jsonl
@@ -57,12 +57,12 @@ python3 -m evidence_bench validate examples/synthetic.jsonl --as-of 2026-01-31
 python3 -m unittest discover -s tests -v
 ```
 
-导入真实案例时，使用 `--real-only --require-reviewed` 限制为真实且已复核的记录。`data/public-facts.jsonl` 已通过该门槛；对虚构样例运行这两个开关会按预期失败；该失败不是工具故障。
+Use `--real-only --require-reviewed` when admitting real cases to require real, reviewed records. `data/public-facts.jsonl` passes this gate. The fictional fixtures fail both flags as expected; this failure is not a tool defect.
 
 ```sh
 python3 -m evidence_bench validate examples/synthetic.jsonl --real-only --require-reviewed
 ```
 
-退出码：`0` 为格式检查通过，`1` 为数据或输入文件错误，`2` 为命令行参数错误。诊断使用输入文件序号和案例/行号，不回显字段值、文件路径或来源正文。
+Exit codes: `0` means format checks passed, `1` means a data or input-file error, and `2` means a command-line argument error. Diagnostics use input-file indices and case or line numbers without echoing field values, file paths, or source contents.
 
-格式检查通过并不证明事实正确、来源存在、许可合规或没有个人信息。`--real-only` 只检查标记，不能识别被错标为真实的数据。目前有 8 条经代理核对的公开事实案例；独立人工复核与正式评分流程仍未完成。实际模型评测前须先完成约定的独立复核和评分口径。
+Passing format checks does not establish factual accuracy, source availability, licensing compliance, or absence of personal information. `--real-only` checks only a label and cannot detect data incorrectly marked as real. The repository currently contains 8 agent-reviewed public-fact cases in English. Independent human review and a formal scoring process remain incomplete, and the published fixtures do not provide Chinese-language evaluation coverage. Complete the agreed independent review and scoring rules before model evaluation.

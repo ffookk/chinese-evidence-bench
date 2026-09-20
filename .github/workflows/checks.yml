@@ -23,6 +23,8 @@ jobs:
           python-version: '3.11'
       - name: Privacy guard
         run: python scripts/privacy_check.py --history
+      - name: English contribution policy
+        run: python scripts/check_english.py
       - name: Unit tests
         run: python -m unittest discover -s tests -v
       - name: Validate documented examples

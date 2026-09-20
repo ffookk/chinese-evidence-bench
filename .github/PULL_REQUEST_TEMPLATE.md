@@ -1,20 +1,20 @@
-## 解决的问题
+## Problem
 
-说明具体问题，以及本次改动带来的结果。
+Describe the specific problem and the result of this change.
 
-## 改动与来源
+## Changes and sources
 
-列出核心改动；涉及事实或数据时附原始来源、证据位置和核验日期。
+List the main changes. For factual or data changes, include original sources, evidence locations, and review dates.
 
-## 验证
+## Validation
 
-说明如何验证、实际观察到什么；未验证的部分请明确写出。
+Explain how the change was checked and what was actually observed. Clearly identify anything not verified.
 
-## 局限与后续
+## Limitations and follow-up
 
-列出适用范围、仍待核实的事项和后续独立工作。
+State the scope, unresolved questions, and independent follow-up work.
 
-- [ ] 已区分已验证结果与待完成计划。
-- [ ] 涉及案例数据时，已区分真实与虚构记录，并在批次说明中披露复核方式和边界；不涉及则注明不适用。
-- [ ] 未提交密钥、凭据或私密个人数据。
-- [ ] 外部内容的来源与使用条件已检查，或已明确标记为待核验线索且未复制其内容。
+- [ ] Verified results are distinguished from unfinished plans.
+- [ ] Case data distinguishes real and synthetic records, and the batch notes disclose the review method and limitations; mark this item not applicable if no case data is involved.
+- [ ] No secrets, credentials, or private personal information are included.
+- [ ] External sources and usage conditions have been checked, or are explicitly marked as unverified references without copying their content.

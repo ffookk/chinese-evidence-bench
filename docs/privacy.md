@@ -1,29 +1,29 @@
-# 隐私与贡献检查
+# Privacy and contribution checks
 
-## 已采用的措施
+## Measures in place
 
-- 演示和测试只使用虚构内容；个人输入与输出放在忽略的本地目录。
-- 提交使用 GitHub noreply 邮箱；提交前检查作者和提交者信息。
-- CI 使用只读仓库权限，不传入项目密钥，不上传输入、输出或测试文件作为 artifact。
-- GitHub Actions 固定到具体提交；依赖更新时需要重新检查。
-- 隐私检查发现问题时仅显示规则名和文件序号，不回显匹配值。
+- Demonstrations and tests use fictional content; personal inputs and outputs belong in ignored local directories.
+- Commits use a GitHub noreply email address; author and committer metadata are checked before submission.
+- CI has read-only repository permissions, receives no project secrets, and does not upload input, output, or test files as artifacts.
+- GitHub Actions are pinned to specific commits and should be reviewed again when updated.
+- Privacy diagnostics display only rule names and file indices, without echoing matched values.
 
-## 提交前运行
+## Before submitting
 
 ```sh
-git add <准备提交的文件>
+git add <files-to-submit>
 python3 scripts/privacy_check.py --history
 python3 -m unittest discover -s tests -v
 ```
 
-检查覆盖已跟踪工作树文本、暂存区内容、可达提交中的文本及文件名和提交元数据，并检测常见密钥格式、私人对话链接、本机用户路径、非示例邮箱和敏感目录。二进制及符号链接需要人工处理。
+The check covers tracked working-tree text, staged contents, text and filenames in reachable commits, and commit metadata. It detects common secret formats, private conversation links, local user paths, non-example email addresses, and sensitive directories. Binary files and symbolic links require manual handling.
 
-创建本地 commit 后、推送前，再运行一次带 `--history` 的隐私检查，以覆盖这次提交新增的作者、提交者和提交说明。
+After creating a local commit and before pushing, rerun the privacy check with `--history` to cover the new author, committer, and commit message.
 
-这是启发式检查，不能识别所有个人信息、自定义凭据或图片内容。它也不会检查未跟踪文件、GitHub issue/PR 正文、云端不可达历史、平台内部保留记录或已存在的外部副本。发布前仍需人工审阅差异及协作内容。
+This heuristic check cannot identify every kind of personal information, custom credential, or image content. It does not inspect untracked files, GitHub issue or PR bodies, remotely unreachable history, platform retention records, or existing external copies. Review diffs and collaboration content before publication.
 
-忽略规则不能移除已经跟踪的文件；提交前仍应使用 `git diff --cached --name-only` 检查暂存文件列表。
+Ignore rules do not remove files already tracked by Git. Check the staged file list with `git diff --cached --name-only` before submitting.
 
-## 发现问题时
+## If a problem is found
 
-停止继续提交，先在本机定位和移除相关内容。不要在 issue、PR、讨论、截图或日志中粘贴原值；如凭据确已暴露，先撤销或轮换，再处理仓库历史。普通 issue 仅记录不含敏感值的处理状态。
+Stop submitting changes and locate and remove the material locally. Do not paste sensitive values into issues, PRs, discussions, screenshots, or logs. If a credential was exposed, revoke or rotate it before addressing repository history. Ordinary issues should record only remediation status without sensitive values.

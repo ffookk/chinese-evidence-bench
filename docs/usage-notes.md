@@ -1,17 +1,17 @@
-# 输入与诊断速查
+# Input and diagnostic notes
 
-- `validate` 至少需要一个文件参数；不传文件属于命令行参数错误。
-- 文件后缀不区分大小写，例如 `.JSONL` 仍按逐行案例读取。
-- 诊断中的 `input 1`、`input 2` 按命令行传入文件的顺序编号；排查时保留该顺序。
-- JSONL 的 `line` 指原文件的物理行号，空行虽被跳过，后续行号仍包含它们。
-- 一条 JSONL 语法错误不会遮住后续行的诊断；整次校验仍返回失败。
-- JSON 数组文件会先整体解析；任一 JSON 语法错误都会阻止该文件内的案例检查。
-- 成功摘要写入标准输出；校验诊断与失败摘要写入标准错误，脚本应分别处理。
-- 摘要中的 `case(s)` 统计成功解析的条目，其中仍可能有字段错误；它不是合格案例数。
-- 摘要中的 `error(s)` 统计问题条数；同一个案例违反多条规则时可以贡献多个错误。
-- 保存文件时使用不带 BOM 的 UTF-8；开头的 BOM 不会被当前 JSON 解码流程自动移除。
-- 命令不会递归查找目录中的案例；请显式传入待检查的 `.json` 或 `.jsonl` 文件。
-- 某个输入文件失败后，命令仍检查后续文件；应查看全部诊断后再重新运行。
-- `--real-only` 和 `--require-reviewed` 对本次命令的所有输入生效；需要不同门槛时分开运行。
-- `--as-of` 只改变日期上限，不会更新记录中的日期，也不会重新抓取来源。
-- 将 JSONL 转为 `.json` 时，须把案例对象组成一个 JSON 数组；只改扩展名不能完成转换。
+- `validate` requires at least one file argument; omitting files is a command-line argument error.
+- File extensions are case-insensitive; for example, `.JSONL` is still read as one case per line.
+- Diagnostic labels `input 1` and `input 2` follow the command-line file order; preserve that order when investigating errors.
+- A JSONL `line` refers to the physical input line number. Blank lines are skipped, but still count toward later line numbers.
+- A syntax error on one JSONL line does not hide diagnostics on later lines; the overall validation still fails.
+- A JSON array file is parsed as a whole. Any JSON syntax error prevents case validation for that file.
+- Success summaries go to standard output; validation diagnostics and failure summaries go to standard error. Scripts should handle them separately.
+- The `case(s)` count includes successfully parsed entries that may still have field errors; it is not a count of valid cases.
+- The `error(s)` count measures individual problems. One case can contribute multiple errors by violating multiple rules.
+- Save files as UTF-8 without a BOM; the current JSON decoding flow does not automatically remove an initial BOM.
+- The command does not recursively find cases in directories. Pass each `.json` or `.jsonl` file explicitly.
+- If one input file fails, the command continues checking later files. Read all diagnostics before rerunning it.
+- `--real-only` and `--require-reviewed` apply to every input in that invocation. Use separate commands when files require different gates.
+- `--as-of` changes only the date cutoff. It does not update record dates or fetch sources again.
+- To convert JSONL to `.json`, combine the case objects into a JSON array. Changing the extension alone is insufficient.
