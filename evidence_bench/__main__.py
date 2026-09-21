@@ -156,6 +156,7 @@ def main(argv=None):
     stats = {
         "files": len(args.paths),
         "cases": 0,
+        "time_sensitive_cases": 0, "time_independent_cases": 0,
     }
     for file_index, path in enumerate(args.paths, 1):
         if args.input_format is None and path != Path("-") and path.suffix.lower() not in {".json", ".jsonl"}:
@@ -210,6 +211,7 @@ def main(argv=None):
             errors += len(problems)
             if args.stats and not problems:
                 stats["cases"] += 1
+                stats["time_sensitive_cases" if case["time_sensitive"] else "time_independent_cases"] += 1
             if (args.summary or args.json_summary) and not problems:
                 summary["synthetic" if case["synthetic"] else "real"] += 1
                 summary[case["review_status"]] += 1
