@@ -82,3 +82,42 @@ Keep the exact dataset alongside the private artifact: case questions are not co
 The writer requires POSIX directory operations. It opens every supplied output-directory component without following symlinks and holds directory descriptors while creating and publishing the file. Symlink aliases in output paths are rejected; supply the actual directory path. A complete temporary file is created with mode `0600`, synced, and linked to the destination exclusively. An existing or competing destination causes failure without replacement. New directories use `0700`; existing directory permissions are unchanged. Temporary files are removed after success or failure when the filesystem permits cleanup.
 
 This prevents path-alias redirection and overwrite during publication; it is not encryption, a backup policy, or protection from another process running as the same account. Holding a directory descriptor does not prevent a privileged actor from renaming that directory; the write remains in the originally opened directory. Do not use a directory concurrently controlled by untrusted processes. The application reads only the explicit dataset/run paths and writes only the selected destination plus temporary files and missing parent directories. Artifacts contain supplied prompts, responses and labels and can be sensitive. Never commit or publish them without a separate privacy review.
+
+## Compare two scored runs
+
+The `compare-runs` command accepts two scored artifacts, revalidates their embedded runs against the complete dataset, and recomputes every stored hash, manifest field, metric and limitation before using them. Both must use the exact same dataset, case set, scoring policy and `validation_as_of` cutoff. Missing responses remain explicit records. Different model labels, prompts, review metadata and generation settings are allowed, with differences disclosed; matching datasets alone do not prove a controlled experiment.
+
+```sh
+python3 -m evidence_bench compare-runs \
+  --dataset examples/synthetic.jsonl \
+  --left private-output/left-score.json \
+  --right private-output/right-score.json \
+  --output private-output/comparison.json
+```
+
+Create those two scored files with `score-run --output` using separate supplied run files. The example paths are placeholders for local artifacts; the repository publishes no measured model runs. Comparing two untouched templates is permitted, but yields no scored quality pairs. Reusing an existing output path fails. Comparison reads scored artifacts up to 32 MiB, and uses the same protected private writer and fixed console messages as scoring.
+
+The private comparison artifact has schema version 1, type `paired_comparison`, policy `paired_binary_v1`, source run hashes/identifiers, dataset identity, validation date, sample counts, aggregate metrics, fixed strata, per-case judgment transitions and limitations. Its content is deterministic and includes no new timestamp. It does not duplicate raw response text, prompts or model/reviewer labels; identifiers and derived scores still require a privacy review before publication. Keep the original dataset and scored runs to reproduce it.
+
+| Output | Interpretation |
+| --- | --- |
+| `aggregate.left_metrics` / `right_metrics` | All original quality and coverage counts, with their own explicit denominators |
+| `aggregate.aggregate_deltas` | Right minus left numerator, denominator and rate; a rate delta is `null` if either rate lacks a denominator |
+| `aggregate.paired_quality` | Per-axis changes using only cases marked `correct` or `incorrect` in **both** runs |
+| `improved` / `regressed` / `unchanged` | Incorrect to correct / correct to incorrect / identical binary judgments among eligible pairs |
+| `not_comparable` | Every pair with either side unscored or not applicable; never silently treated as unchanged or wrong |
+| `left_only_scored` / `right_only_scored` / `neither_scored` | The three nonoverlapping parts of `not_comparable` |
+| Paired `left_score` / `right_score` | Correct judgments over the **same eligible-pair denominator** |
+| `improvement_rate` / `regression_rate` | Improved/regressed pairs over all eligible pairs; null when no pairs qualify |
+| `response_availability` | Became observed/missing or remained observed/missing; availability is separate from quality |
+| `outcome_transitions` | Complete 4-by-4 count matrix of declared response outcomes |
+| `strata` | The same reports for each answerability label, plus synthetic and real groups; empty groups remain visible with undefined rates |
+| `declared_setup_changes` | Boolean changes in model label, parameters, review method, reviewer label and capture timestamp, plus a count of changed effective prompts |
+| `applicability_label_changes` | Per-axis counts moving to/from `not_applicable`; moving from that label to `unscored` does not establish actual applicability |
+| `case_changes` | Private case IDs/hashes, before/after outcomes and judgment states, and the per-axis transition classification |
+
+`effective_prompts_changed` compares exact prompt text after substituting the dataset question for null overrides; explicit text equal to the default is not a prompt change. Parameter changes compare canonical JSON, retaining type differences. Setup-change flags describe declarations and do not authenticate them or determine experimental validity.
+
+Aggregate rates may change because a different subset was scored. For example, two runs can both have 1/2 correct overall while their only jointly scored case improves from incorrect to correct. The paired improvement is then 1/1, while the aggregate rate delta is zero. Both describe their stated denominators; neither establishes general model improvement. Coverage and label changes must accompany any interpretation. Fixed strata are separate views, not a disjoint cross-product partition; do not sum counts across both stratification dimensions.
+
+No significance tests, confidence intervals, cost estimates, automatic winner selection, or causal claims are produced. Small, synthetic, selectively scored or differently judged samples do not support broad rankings. Case review states remain dataset declarations, and synthetic fixtures remain fictional even when their run metadata names a model. Actual retrieval experiments and model generation are still outside this implementation.

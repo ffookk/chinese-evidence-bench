@@ -24,6 +24,7 @@ Acceptance: another contributor can recalculate the same scores from saved run r
 
 ## PR 3: An improvement experiment
 
+- [x] Add deterministic paired comparison of verified offline runs on the same dataset, with jointly scored denominators, coverage changes, answerability/synthetic strata, private per-case transitions, and declared setup differences. This is analysis infrastructure, not a completed model or retrieval experiment.
 - [ ] Compare performance with and without retrieval on the same test set and scoring rules.
 - [ ] Save retrieved source locations and evidence-version information available at the time.
 - [ ] Report quality, coverage, and cost together, including cases that did not improve.
