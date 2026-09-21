@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 import hashlib
+import io
 import json
 import math
 import os
@@ -190,7 +191,7 @@ def load_dataset(paths, validation_as_of):
         path = Path(raw_path)
         text = _read_text(path, context)
         if path.suffix.lower() == ".jsonl":
-            records = [decode_json(line, context + f", line {number}") for number, line in enumerate(text.splitlines(), 1) if line.strip()]
+            records = [decode_json(line, context + f", line {number}") for number, line in enumerate(io.StringIO(text, newline=None), 1) if line.strip()]
         elif path.suffix.lower() == ".json":
             records = decode_json(text, context)
             if not isinstance(records, list):
