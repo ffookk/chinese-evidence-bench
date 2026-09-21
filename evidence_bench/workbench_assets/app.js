@@ -11,7 +11,7 @@
   let cases = [], runs = [], view = null, selectedCase = null, page = 0, busy = false;
   let records = new Map(), drafts = new Map(), metadata = {}, previewGeneration = 0, previewTimer = null, comparisonSelection = null;
   let pageSize = 20;
-  const filterIds = ["case-search", "answerability-filter", "synthetic-filter", "outcome-filter"];
+  const filterIds = ["case-search", "answerability-filter", "synthetic-filter", "outcome-filter", "case-sort"];
   const dirty = () => drafts.size > 0 || Object.keys(metadata).length > 0;
   const clone = value => structuredClone(value);
   const currentRecord = () => drafts.get(selectedCase) || records.get(selectedCase);
@@ -158,7 +158,9 @@
   }
   function filteredCases() {
     const search = byId("case-search").value.trim().toLowerCase(), answerability = byId("answerability-filter").value, synthetic = byId("synthetic-filter").value, outcome = byId("outcome-filter").value;
-    return cases.filter(item => (!search || (item.id + " " + item.question).toLowerCase().includes(search)) && (!answerability || item.answerability === answerability) && (!synthetic || item.synthetic === (synthetic === "synthetic")) && (!outcome || (drafts.get(item.id) || records.get(item.id))?.outcome === outcome));
+    const filtered = cases.filter(item => (!search || (item.id + " " + item.question).toLowerCase().includes(search)) && (!answerability || item.answerability === answerability) && (!synthetic || item.synthetic === (synthetic === "synthetic")) && (!outcome || (drafts.get(item.id) || records.get(item.id))?.outcome === outcome));
+    const order = byId("case-sort").value;
+    return filtered.sort((a, b) => order === "question" ? a.question.localeCompare(b.question, "en") || a.id.localeCompare(b.id, "en") : (order === "descending" ? -1 : 1) * a.id.localeCompare(b.id, "en"));
   }
   function renderCases() {
     if (!view) return;
