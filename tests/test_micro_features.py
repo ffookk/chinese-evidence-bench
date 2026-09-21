@@ -183,5 +183,13 @@ class MicroFeatureTests(unittest.TestCase):
         counts = self.stats()["locator_type_counts"]
         self.assertEqual(counts, {"page": 0, "paragraph": 1, "section": 0, "table": 0, "timestamp": 0})
 
+    def test_real_label_review_counts(self):
+        case = self.fixture()  # Structural test data, not a factual source claim.
+        case.update(synthetic=False, question="Fictional classification test only.", review_status="pending", verified_at=None)
+        case["evidence"][0]["source_url"] = "https://www.rfc-editor.org/rfc/rfc8259"
+        counts = self.stats(cases=[case])
+        self.assertEqual((counts["real_reviewed_cases"], counts["real_pending_cases"]), (0, 1))
+        self.assertEqual(self.stats()["real_reviewed_cases"], 0)
+
 if __name__ == "__main__":
     unittest.main()
