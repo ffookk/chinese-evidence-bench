@@ -57,6 +57,8 @@ Changing a selection or editing a run clears the displayed comparison. Export co
 
 Every saved run has an integer revision. Save, preview, remove, export and comparison operations include the revision last observed by the tab. A stale, missing, null, boolean or incorrect revision is rejected; stale edits never overwrite another tab's saved changes. Reload deliberately to obtain current state. Comparison and export also reject stale revisions rather than silently changing the requested result.
 
+If another tab removes the selected run, **Reload selected run** opens the first remaining saved run, or shows the empty state when none remain. If selecting or reloading a run fails, the selector returns to the run still displayed in the editor and unsaved drafts remain intact. A loaded run absent from the refreshed saved list is labeled unavailable in that list; an error never relabels the currently loaded data.
+
 A draft exists only in its browser tab until an explicit save. A browser unload prompt helps protect unsaved edits but is subject to browser behavior. Reloading a tab discards its unsaved draft; saved server runs remain available while the process is running. Removing a run removes its saved server state, not any downloaded copies or another tab's already loaded data. Closing a tab does not stop the server. Stopping or restarting the process loses all unexported server runs.
 
 ## Network, storage and privacy boundaries

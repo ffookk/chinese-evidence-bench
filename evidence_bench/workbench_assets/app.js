@@ -42,7 +42,15 @@
   async function act(action) {
     if (busy) return;
     busy = true; controls();
-    try { await action(); } catch (error) { message(error.message || "The local operation failed.", true); }
+    try { await action(); } catch (error) {
+      const select = byId("run-select");
+      if (view && ![...select.options].some(option => option.value === view.key)) {
+        const option = node("option", view.run.run_id + " · loaded state unavailable in saved list");
+        option.value = view.key; option.disabled = true; select.append(option);
+      }
+      select.value = view?.key || "";
+      message(error.message || "The local operation failed.", true);
+    }
     finally { busy = false; controls(); }
   }
   function options(select, values, previous) {
@@ -281,7 +289,12 @@
     } finally { byId("import-run").value = ""; }
   }));
   byId("run-select").addEventListener("change", () => act(async () => { loadView(await api("/api/select", {key: byId("run-select").value})); }));
-  byId("reload-run").addEventListener("click", () => { if (dirty() && !window.confirm("Discard this tab's unsaved draft and load the latest saved revision?")) return; act(async () => { const key = view.key; await refreshRuns(); if (runs.some(item => item.key === key)) loadView(await api("/api/select", {key})); else clearSelection(); message("Loaded the current saved state. Other tabs keep their own drafts."); }); });
+  byId("reload-run").addEventListener("click", () => { if (dirty() && !window.confirm("Discard this tab's unsaved draft and load the latest saved revision?")) return; act(async () => {
+    const previousKey = view.key; await refreshRuns();
+    const key = runs.some(item => item.key === previousKey) ? previousKey : runs[0]?.key;
+    if (key) loadView(await api("/api/select", {key})); else clearSelection();
+    message("Loaded the current saved state. Other tabs keep their own drafts.");
+  }); });
   byId("save-run").addEventListener("click", () => act(async () => { const result = await api("/api/save", draftPayload()); loadView(result); await refreshRuns(); message("Validated changes saved to server memory. Export explicitly to keep a file."); }));
   byId("discard-run").addEventListener("click", () => { if (window.confirm("Discard this tab's unsaved changes?")) { loadView(view); message("Draft discarded; the last loaded saved run is unchanged."); } });
   byId("remove-run").addEventListener("click", () => { if (!window.confirm("Remove this saved run from server memory? Existing downloaded files will remain unchanged.")) return; act(async () => { await api("/api/remove", {key: view.key, revision: view.revision}); clearSelection(); await refreshRuns(); if (runs.length) loadView(await api("/api/select", {key: runs[0].key})); message("Removed the run from session memory."); }); });

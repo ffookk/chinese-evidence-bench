@@ -41,14 +41,14 @@ def read_cases(path, max_bytes=None, input_format=None, reject_blank=False):
             if max_bytes is not None and len(data) > max_bytes:
                 yield "file", None, "input exceeds the byte limit"
                 return
-            stream = io.StringIO(data.decode("utf-8"))
+            stream = io.StringIO(data.decode("utf-8"), newline=None)
         elif max_bytes is not None:
             with path.open("rb") as source:
                 data = source.read(max_bytes + 1)
             if len(data) > max_bytes:
                 yield "file", None, "input exceeds the byte limit"
                 return
-            stream = io.StringIO(data.decode("utf-8"))
+            stream = io.StringIO(data.decode("utf-8"), newline=None)
         else:
             stream = path.open(encoding="utf-8")
         with stream:

@@ -19,7 +19,8 @@ DATE_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
 
 
 def nonempty(value):
-    return isinstance(value, str) and bool(value.strip())
+    return (isinstance(value, str) and bool(value.strip())
+            and not any(0xD800 <= ord(char) <= 0xDFFF for char in value))
 
 
 def _fields(value, expected, path, errors):
@@ -51,7 +52,7 @@ def _date(value, field, today, errors):
 
 
 def _source_url(value, synthetic):
-    if not nonempty(value) or "\\" in value or any(char.isspace() for char in value):
+    if not nonempty(value) or "\\" in value or any(char.isspace() or ord(char) < 32 or 127 <= ord(char) <= 159 for char in value):
         return False
     try:
         parsed = urlsplit(value)
@@ -59,7 +60,7 @@ def _source_url(value, synthetic):
         port = parsed.port
     except ValueError:
         return False
-    if (parsed.scheme != "https" or not hostname or parsed.username is not None
+    if (parsed.scheme != "https" or not hostname or "[" in parsed.netloc or parsed.username is not None
             or parsed.password is not None or parsed.query or parsed.fragment
             or port not in (None, 443)):
         return False
@@ -74,6 +75,8 @@ def _source_url(value, synthetic):
         return hostname.endswith(".invalid")
     reserved = {"example.com", "example.org", "example.net", "localhost", "invalid", "local", "test", "example"}
     if "." not in hostname or any(hostname == domain or hostname.endswith("." + domain) for domain in reserved):
+        return False
+    if all(re.fullmatch(r"(?:0x[0-9a-f]+|[0-9]+)", label, re.IGNORECASE) for label in labels):
         return False
     try:
         ipaddress.ip_address(hostname)

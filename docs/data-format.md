@@ -6,6 +6,8 @@ This specification defines the current validator's rules. The validator uses onl
 
 Inputs use UTF-8. A `.json` file must contain a top-level array of cases; each nonempty line in a `.jsonl` file must contain one case object. Blank JSONL lines are allowed. Every input file must contain at least one readable case. Duplicate JSON keys, `NaN`, `Infinity`, and unknown fields are errors. IDs are checked for uniqueness across all files passed to one command.
 
+JSONL physical lines may end with LF, CRLF, or CR. Unicode text separators inside JSON strings remain part of the field value. These rules are identical for file input, standard input, byte-limited validation, and evaluation.
+
 Every case must include all fields below. Nullable fields must explicitly use `null`; they cannot be omitted.
 
 | Field | Format and meaning |
@@ -30,11 +32,13 @@ Each source object must contain exactly these fields:
 
 | Field | Format and meaning |
 | --- | --- |
-| `source_url` | HTTPS URL without user information, query parameters, fragments, backslashes, whitespace, or a port other than 443. Put anchor information in the locator field. Hostnames use valid ASCII labels; internationalized names require Punycode. Synthetic cases may use only subdomains of `.invalid`. Real cases require dotted hostnames and reject IP addresses, `localhost`, `.local`, `.invalid`, `.test`, `.example`, and `example.com` / `example.org` / `example.net`, including their subdomains |
+| `source_url` | HTTPS URL without user information, query parameters, fragments, backslashes, whitespace, raw control characters, or a port other than 443. Put anchor information in the locator field. Hostnames use valid ASCII labels; internationalized names require Punycode. Synthetic cases may use only subdomains of `.invalid`. Real cases require dotted hostnames and reject IP addresses, `localhost`, `.local`, `.invalid`, `.test`, `.example`, and `example.com` / `example.org` / `example.net`, including their subdomains |
 | `source_title` | Nonempty source title |
 | `evidence_locator` | Object containing exactly `type` and `value` |
 
 `evidence_locator.type` is `paragraph`, `page`, `section`, `table`, or `timestamp`. Its `value` is a nonempty string, such as `Section 2, paragraph 3`. The validator checks only that a locator exists. Open the source to assess whether the location is usable, precise, and supports the answer, then disclose the review method in the batch notes. Source URLs must not contain access credentials, tracking parameters, or personal information. Convert parameterized source links to stable, publicly shareable URLs first.
+
+The real-source IP exclusion also rejects numeric-only hostnames, including shortened IPv4 and hexadecimal or octal spellings. Numeric labels within an ordinary domain remain allowed. Bracketed address authorities, including IPvFuture forms, are not accepted as domain names for real or synthetic sources.
 
 Dates must be strict ISO calendar dates, such as `2026-01-15`. Impossible dates, missing zero padding, timestamps, and future dates are rejected. The future-date cutoff defaults to the local current date; use `--as-of YYYY-MM-DD` for a fixed, reproducible cutoff. When both dates are present, `verified_at` cannot precede `valid_as_of`. This format describes previously reviewed facts, not future predictions.
 
@@ -43,6 +47,7 @@ Dates must be strict ISO calendar dates, such as `2026-01-15`. Impossible dates,
 - Write `schema_version` as integer `1`; `1.0`, `true`, and string `"1"` are not substitutes.
 - Use JSON booleans `true` / `false` for `synthetic` and `time_sensitive`, not `0` / `1` or strings.
 - Required nonempty text cannot consist only of spaces, tabs, or newlines. The current check tests emptiness after stripping leading and trailing whitespace.
+- Text must be representable as UTF-8; escaped lone surrogate values are rejected, while valid supplementary Unicode code points are preserved.
 - Object-field order does not affect validation. Retaining every required field matters more than copying a particular order.
 - Every source in an array is checked. One valid source does not cancel another source's format error in the same case.
 - `insufficient_evidence` and `needs_clarification` may retain relevant sources, which must still satisfy every format constraint.
