@@ -17,11 +17,11 @@ CJK = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\uf900-\
 def has_cjk(text, suffix=''):
     if CJK.search(text):
         return True
-    documents = text.splitlines() if suffix.lower() == '.jsonl' else [text]
+    documents = re.split(r'\r\n|\r|\n', text) if suffix.lower() == '.jsonl' else [text]
     if suffix.lower() in {'.json', '.jsonl'}:
         for document in documents:
             try:
-                decoded = json.loads(document)
+                decoded = json.loads(document, object_pairs_hook=list)
             except (ValueError, RecursionError):
                 continue  # The project's format checks report invalid JSON.
             if CJK.search(json.dumps(decoded, ensure_ascii=False)):
@@ -34,6 +34,15 @@ def git(root, *args):
     if result.returncode:
         raise RuntimeError('Git inspection failed.')
     return result.stdout
+
+
+def linked_worktree_path(root, name):
+    path = root
+    for part in Path(name).parts:
+        path = path / part
+        if path.is_symlink():
+            return True
+    return False
 
 
 def inspect(root):
@@ -55,10 +64,13 @@ def inspect(root):
         try:
             if has_cjk(staged.decode('utf-8'), path.suffix):
                 findings.append((index, 'staged-cjk'))
-            if path.is_symlink():
+            if linked_worktree_path(root, name):
                 findings.append((index, 'symlink-needs-review'))
-            elif path.exists() and has_cjk(path.read_text(encoding='utf-8'), path.suffix):
-                findings.append((index, 'working-tree-cjk'))
+            elif path.is_file():
+                if has_cjk(path.read_text(encoding='utf-8'), path.suffix):
+                    findings.append((index, 'working-tree-cjk'))
+            elif path.exists():
+                findings.append((index, 'nonregular-needs-review'))
         except UnicodeError:
             findings.append((index, 'binary-needs-review'))
     return findings

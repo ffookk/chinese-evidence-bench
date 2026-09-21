@@ -5,6 +5,7 @@ Reports rule names only, never the matching values. This is a heuristic, not
 a guarantee that arbitrary personal information or every credential is found.
 """
 import argparse
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -30,6 +31,35 @@ def scan_text(text):
         if domain not in EXAMPLE_DOMAINS and not domain.endswith('.invalid') and domain != 'users.noreply.github.com' and match.group(0).lower() != 'noreply@github.com':
             found.add('non-example-email')
     return found
+
+
+def scan_content(text, suffix=''):
+    found = scan_text(text)
+    if suffix.lower() not in {'.json', '.jsonl'}:
+        return found
+    documents = re.split(r'\r\n|\r|\n', text) if suffix.lower() == '.jsonl' else [text]
+    for document in documents:
+        try:
+            decoded = json.loads(document, object_pairs_hook=list)
+        except (ValueError, RecursionError):
+            continue  # Format validation handles malformed JSON separately.
+        pending = [decoded]
+        while pending:
+            value = pending.pop()
+            if isinstance(value, str):
+                found.update(scan_text(value))
+            elif isinstance(value, (list, tuple)):
+                pending.extend(value)
+    return found
+
+
+def linked_worktree_path(root, name):
+    path = root
+    for part in Path(name).parts:
+        path = path / part
+        if path.is_symlink():
+            return True
+    return False
 
 
 def unsafe_filename(name):
@@ -61,7 +91,7 @@ def inspect(root, history=False):
         # A later working-tree edit must not hide an earlier staged value.
         staged = git(root, 'cat-file', 'blob', oid.decode('ascii'))
         try:
-            staged_labels = scan_text(staged.decode('utf-8'))
+            staged_labels = scan_content(staged.decode('utf-8'), Path(name).suffix)
         except UnicodeDecodeError:
             staged_labels = {'binary-needs-manual-review'}
         if mode == b'120000':
@@ -69,13 +99,15 @@ def inspect(root, history=False):
         if staged_labels:
             findings.append((f'index-file-{index}', sorted(staged_labels)))
         path = root / name
-        if path.is_symlink():
+        if linked_worktree_path(root, name):
             labels.add('tracked-symlink')
         elif path.is_file():
             try:
-                labels.update(scan_text(path.read_text(encoding='utf-8')))
+                labels.update(scan_content(path.read_text(encoding='utf-8'), path.suffix))
             except UnicodeDecodeError:
                 labels.add('binary-needs-manual-review')
+        elif path.exists():
+            labels.add('nonregular-needs-manual-review')
         if labels:
             findings.append((f'tracked-file-{index}', sorted(labels)))
     if history:
@@ -98,12 +130,13 @@ def inspect(root, history=False):
                     findings.append(('historical-filename', ['sensitive-filename']))
                 if mode == b'120000':
                     findings.append(('historical-symlink', ['tracked-symlink']))
-                if kind != b'blob' or oid in seen:
+                content_key = (oid, Path(name).suffix.lower())
+                if kind != b'blob' or content_key in seen:
                     continue
-                seen.add(oid)
+                seen.add(content_key)
                 raw = git(root, 'cat-file', 'blob', oid.decode('ascii'))
                 try:
-                    labels = scan_text(raw.decode('utf-8'))
+                    labels = scan_content(raw.decode('utf-8'), Path(name).suffix)
                 except UnicodeDecodeError:
                     labels = {'binary-needs-manual-review'}
                 if labels:
