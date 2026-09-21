@@ -95,6 +95,7 @@ def main(argv=None):
     validate.add_argument("--require-locator-type", choices=sorted(LOCATOR_TYPES), help="require evidence with this locator type")
     validate.add_argument("--max-review-age", type=_count, help="maximum review age in days relative to --as-of")
     validate.add_argument("--source-host", action="append", default=[], help="allowed source hostname; repeat to allow more hosts")
+    validate.add_argument("--min-source-hosts", type=_count, help="minimum distinct evidence hostnames per case")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -141,6 +142,8 @@ def main(argv=None):
                 problems.append("verified_at: absent or older than the allowed review age")
             if args.source_host and not problems and any(urlsplit(source["source_url"]).hostname not in {host.lower() for host in args.source_host} for source in case["evidence"]):
                 problems.append("evidence: source host is outside the allowed set")
+            if args.min_source_hosts is not None and not problems and len({urlsplit(source["source_url"]).hostname for source in case["evidence"]}) < args.min_source_hosts:
+                problems.append("evidence: fewer than the required distinct source hosts")
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)
