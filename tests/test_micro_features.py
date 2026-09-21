@@ -55,5 +55,10 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--min-sources", "1")[0], 0)
         self.assertEqual(self.run_cli("--min-sources", "2")[0], 1)
 
+    def test_required_answerability(self):
+        self.assertEqual(self.run_cli("--require-answerability", "supported")[0], 0)
+        self.assertEqual(self.run_cli("--require-answerability", "needs_clarification")[0], 1)
+        self.assertNotIn("private-marker", self.run_cli("--require-answerability", "private-marker")[2])
+
 if __name__ == "__main__":
     unittest.main()

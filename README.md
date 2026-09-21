@@ -43,6 +43,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `validate --json-summary` emits only the same seven counters as one JSON object. It cannot be combined with `--summary`.
 - `validate --expect-cases N` requires exactly N parsed cases. Numeric limits accept 1–9 ASCII decimal digits; errors still suppress every report.
 - `validate --min-sources N` requires N evidence entries per case, including uncertain cases.
+- `validate --require-answerability STATE` requires the selected schema answerability state throughout the batch.
 
 ## Problem
 
