@@ -29,7 +29,7 @@ def _decode(text):
     return json.loads(text, object_pairs_hook=_strict_object, parse_constant=_reject_constant)
 
 
-def read_cases(path, max_bytes=None, input_format=None):
+def read_cases(path, max_bytes=None, input_format=None, reject_blank=False):
     """Yield (position, case, error); JSONL errors do not hide later records."""
     try:
         if path == Path("-"):
@@ -54,6 +54,8 @@ def read_cases(path, max_bytes=None, input_format=None):
             if input_format == "jsonl" or input_format is None and (path == Path("-") or path.suffix.lower() == ".jsonl"):
                 for line_no, line in enumerate(stream, 1):
                     if not line.strip():
+                        if reject_blank:
+                            yield f"line {line_no}", None, "blank JSONL line is not allowed"
                         continue
                     try:
                         yield f"line {line_no}", _decode(line), None
@@ -120,6 +122,7 @@ def main(argv=None):
     validate.add_argument("--unique-questions", action="store_true", help="reject repeated normalized question wording")
     validate.add_argument("--max-input-bytes", type=_count, help="maximum bytes read from each input")
     validate.add_argument("--input-format", choices=("json", "jsonl"), help="override the input format for all inputs")
+    validate.add_argument("--reject-blank-lines", action="store_true", help="reject blank physical JSONL lines")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -141,7 +144,7 @@ def main(argv=None):
             errors += 1
             continue
         records = 0
-        for position, case, error in read_cases(path, args.max_input_bytes, args.input_format):
+        for position, case, error in read_cases(path, args.max_input_bytes, args.input_format, args.reject_blank_lines):
             prefix = f"input {file_index}, {position}"
             if error:
                 print(f"{prefix}: {error}", file=sys.stderr)

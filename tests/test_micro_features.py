@@ -122,5 +122,12 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--input-format", "json", content=text)[0], 0)
         self.assertEqual(self.run_cli("--input-format", "jsonl", content=text)[0], 1)
 
+    def test_blank_jsonl_gate(self):
+        text = "\n" + json.dumps(self.fixture())
+        self.assertEqual(self.run_cli(content=text)[0], 0)
+        result, out, err = self.run_cli("--reject-blank-lines", content=text)
+        self.assertEqual((result, out), (1, ""))
+        self.assertIn("line 1", err)
+
 if __name__ == "__main__":
     unittest.main()
