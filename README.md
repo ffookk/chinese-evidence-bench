@@ -53,6 +53,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `validate --unique-questions` detects repeated wording after collapsing whitespace and applying Unicode case folding. It does not identify semantic duplicates.
 - `validate --max-input-bytes N` limits each input in UTF-8 bytes. Oversized input fails without printing its content or path.
 - Use one `-` input operand for UTF-8 JSONL on standard input. Repeated `-`, malformed UTF-8, oversized or unavailable stdin, and invalid paths fail without echoing data.
+- `validate --input-format json|jsonl` overrides filename extensions and stdin defaults for all inputs in that invocation.
 
 ## Problem
 
