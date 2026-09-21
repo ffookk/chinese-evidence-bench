@@ -45,6 +45,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `validate --min-sources N` requires N evidence entries per case, including uncertain cases.
 - `validate --require-answerability STATE` requires the selected schema answerability state throughout the batch.
 - `validate --require-locator-type TYPE` requires at least one source per case and the selected type on every locator.
+- `validate --max-review-age DAYS` requires reviewed dates no older than DAYS relative to `--as-of`; pending cases fail.
 
 ## Problem
 
