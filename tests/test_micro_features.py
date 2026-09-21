@@ -37,5 +37,12 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--quiet"), (0, "", ""))
         self.assertEqual(self.run_cli("--quiet", content="broken")[0], 1)
 
+    def test_json_summary(self):
+        result, out, err = self.run_cli("--json-summary")
+        self.assertEqual((result, err), (0, ""))
+        self.assertEqual(json.loads(out)["synthetic"], 1)
+        self.assertEqual(len(json.loads(out)), 7)
+        self.assertEqual(self.run_cli("--json-summary", "--summary")[0], 2)
+
 if __name__ == "__main__":
     unittest.main()
