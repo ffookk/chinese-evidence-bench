@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 
 from . import __version__
-from .validator import ANSWERABILITY, validate_case
+from .validator import ANSWERABILITY, LOCATOR_TYPES, validate_case
 
 
 def _strict_object(pairs):
@@ -91,6 +91,7 @@ def main(argv=None):
     validate.add_argument("--expect-cases", type=_count, help="require this nonnegative total case count")
     validate.add_argument("--min-sources", type=_count, help="minimum source entries per case")
     validate.add_argument("--require-answerability", choices=sorted(ANSWERABILITY), help="require one answerability state throughout")
+    validate.add_argument("--require-locator-type", choices=sorted(LOCATOR_TYPES), help="require evidence with this locator type")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -131,6 +132,8 @@ def main(argv=None):
                 problems.append("evidence: fewer than the required source entries")
             if args.require_answerability and not problems and case["answerability"] != args.require_answerability:
                 problems.append("answerability: does not match the required state")
+            if args.require_locator_type and not problems and (not case["evidence"] or any(source["evidence_locator"]["type"] != args.require_locator_type for source in case["evidence"])):
+                problems.append("evidence: missing evidence or a different locator type")
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)

@@ -60,5 +60,9 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--require-answerability", "needs_clarification")[0], 1)
         self.assertNotIn("private-marker", self.run_cli("--require-answerability", "private-marker")[2])
 
+    def test_locator_type(self):
+        self.assertEqual(self.run_cli("--require-locator-type", "paragraph")[0], 0)
+        self.assertEqual(self.run_cli("--require-locator-type", "page")[0], 1)
+
 if __name__ == "__main__":
     unittest.main()
