@@ -9,6 +9,7 @@ import sys
 from urllib.parse import urlsplit
 
 from . import __version__
+from . import evaluation
 from .validator import ANSWERABILITY, LOCATOR_TYPES, validate_case
 
 
@@ -102,6 +103,7 @@ def main(argv=None):
     parser = SafeParser(prog="evidence-bench", description="Offline evidence case format checks; does not verify factual truth or privacy.")
     parser.add_argument("--version", action="version", version="evidence-bench package " + __version__ + " (schema v1)")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    evaluation.add_commands(subparsers, _as_of)
     validate = subparsers.add_parser("validate", help="validate JSON arrays or JSONL case files")
     validate.add_argument("paths", nargs="+", type=Path)
     validate.add_argument("--as-of", type=_as_of, default=date.today(), help="date ceiling for reproducible validation (default: local today)")
@@ -127,6 +129,8 @@ def main(argv=None):
     validate.add_argument("--max-diagnostics", type=_count, help="maximum detailed input diagnostics; all validation still runs")
     validate.add_argument("--stats", action="store_true", help="append aggregate dataset statistics after successful validation")
     args = parser.parse_args(argv)
+    if args.command != "validate":
+        return evaluation.run_command(args)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
     if args.paths.count(Path("-")) > 1:
