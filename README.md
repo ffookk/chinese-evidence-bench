@@ -57,6 +57,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `validate --reject-blank-lines` rejects blank physical JSONL lines while keeping ordinary blank-line handling unchanged by default.
 - `validate --json-errors` writes JSON objects with `location` and `message` to stderr; generated locations contain only input/case/line numbers. Argument errors remain fixed prose.
 - `validate --max-diagnostics N` caps detailed input diagnostics, not validation work. Final/global failure counts remain visible, including when N is zero.
+- `validate --stats` appends a `STATS: ` JSON object with aggregate counts after the full batch passes. It cannot be combined with `--json-summary`; it never includes IDs, URLs, or text.
 
 ## Problem
 
