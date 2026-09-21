@@ -74,5 +74,9 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(result, 1)
         self.assertNotIn("private-host-marker", out + err)
 
+    def test_source_host_diversity(self):
+        self.assertEqual(self.run_cli("--min-source-hosts", "1")[0], 0)
+        self.assertEqual(self.run_cli("--min-source-hosts", "2")[0], 1)
+
 if __name__ == "__main__":
     unittest.main()
