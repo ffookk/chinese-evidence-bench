@@ -78,5 +78,11 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--min-source-hosts", "1")[0], 0)
         self.assertEqual(self.run_cli("--min-source-hosts", "2")[0], 1)
 
+    def test_identifier_prefix(self):
+        self.assertEqual(self.run_cli("--id-prefix", "synthetic-")[0], 0)
+        result, out, err = self.run_cli("--id-prefix", "private-id-marker")
+        self.assertEqual(result, 1)
+        self.assertNotIn("private-id-marker", out + err)
+
 if __name__ == "__main__":
     unittest.main()

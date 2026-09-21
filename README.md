@@ -48,6 +48,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `validate --max-review-age DAYS` requires reviewed dates no older than DAYS relative to `--as-of`; pending cases fail.
 - Repeat `validate --source-host HOST` to allow specific hostnames, compared without case differences. Empty evidence remains allowed by the schema unless another gate requires it.
 - `validate --min-source-hosts N` checks distinct hostname count per case, not source independence or factual corroboration.
+- `validate --id-prefix PREFIX` requires an exact case-sensitive identifier prefix without exposing identifiers in reports.
 
 ## Problem
 
