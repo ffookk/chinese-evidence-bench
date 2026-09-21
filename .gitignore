@@ -12,3 +12,8 @@ private-input/
 private-output/
 local-data/
 *.log
+
+# Local package builds
+build/
+dist/
+*.egg-info/

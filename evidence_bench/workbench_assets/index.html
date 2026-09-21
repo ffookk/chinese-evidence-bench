@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="workbench-capability" content="__CAPABILITY__">
+<title>Local Evaluation Workbench · Chinese Evidence Bench</title>
+<style>/*__STYLE__*/</style>
+</head>
+<body>
+<a class="skip" href="#workspace">Skip to case editor</a>
+<header class="masthead">
+  <div><p class="eyebrow">Chinese Evidence Bench</p><h1>Local evaluation workbench</h1><p>Review supplied answers. Keep evidence, judgments, and coverage visible.</p></div>
+  <div class="session-badge"><span class="dot"></span>Loopback only · Memory only</div>
+</header>
+<div class="scope"><strong>No model is called.</strong> Scores summarize supplied judgments. Declared model and reviewer details are not authenticated. <span id="dataset-status">Loading session…</span></div>
+<div id="message" role="status" aria-live="polite"></div>
+<div class="layout">
+<aside class="sidebar" aria-label="Session controls">
+  <section class="panel"><h2>Runs in this session</h2><p class="muted" id="run-count">Saved runs remain in server memory until it stops.</p>
+    <label for="run-select">Selected run</label><select id="run-select"><option value="">No saved runs</option></select>
+    <button id="reload-run" class="subtle" disabled>Reload selected run</button>
+    <details open><summary>Create a run</summary>
+      <label for="new-run-id">Run identifier</label><input id="new-run-id" value="draft-a" maxlength="64" autocomplete="off" spellcheck="false">
+      <label for="new-model">Declared model label</label><input id="new-model" value="unspecified" maxlength="200" autocomplete="off">
+      <button id="create-run">Create unscored run</button>
+    </details>
+    <label class="file-label" for="import-run">Import run or scored JSON</label><input id="import-run" type="file" accept=".json,application/json">
+    <p class="muted small">Imports must match this dataset and validation date. Up to 8 MiB per document and 8 runs. Files are read only after selection.</p>
+    <button id="remove-run" class="danger subtle" disabled>Remove selected run from memory</button>
+  </section>
+  <section class="panel"><h2>Compare saved runs</h2>
+    <label for="left-run">Baseline</label><select id="left-run"></select>
+    <label for="right-run">Candidate</label><select id="right-run"></select>
+    <button id="compare-runs" disabled>Compare paired judgments</button>
+    <p class="muted small">Only jointly scored cases determine quality transitions. Coverage and unknown judgments remain separate.</p>
+  </section>
+  <section class="panel limits"><h2>Session boundaries</h2><p>No cookies, telemetry, automatic disk writes, browser storage, source fetching, or model APIs.</p><p>Save keeps validated changes in memory. Export downloads supplied content; your browser controls the location and permissions.</p><p>Closing a tab does not stop the server. Stop the terminal process to end the session.</p></section>
+</aside>
+<main id="workspace">
+<section id="empty-state" class="panel empty-state"><p class="eyebrow">Start with supplied evidence</p><h2>Create a run or import a saved run</h2><p>A new run represents every case as missing and unscored. Add a response and review its judgments; availability alone is not answer quality.</p><p>All edits are local to this browser tab until you choose <strong>Save changes to memory</strong>.</p></section>
+<div id="run-workspace" hidden>
+  <section class="panel run-bar"><div><p class="eyebrow">Selected run</p><h2 id="run-title"></h2><p id="save-state" role="status">Saved in memory</p></div><div class="actions"><button id="save-run" disabled>Save changes to memory</button><button id="discard-run" class="subtle" disabled>Discard draft</button><button id="export-run" class="subtle">Export run</button><button id="export-score" class="subtle">Export scored artifact</button></div></section>
+  <details class="panel metadata"><summary>Declared run metadata</summary><p class="muted">These are supplied declarations, not proof of actual model generation or independent review. Parameters stay as raw JSON text to preserve numeric types.</p><div class="form-grid">
+    <div><label for="meta-id">Run identifier</label><input id="meta-id" data-meta="run_id" maxlength="64" autocomplete="off"></div>
+    <div><label for="meta-model">Model label</label><input id="meta-model" data-meta="model_label" maxlength="200" autocomplete="off"></div>
+    <div><label for="meta-created">UTC capture timestamp</label><input id="meta-created" data-meta="created_at" placeholder="YYYY-MM-DDTHH:MM:SSZ" autocomplete="off"></div>
+    <div><label for="meta-review-method">Review method</label><select id="meta-review-method" data-meta="review_method"><option value="unspecified">Unspecified</option><option value="manual">Declared manual</option><option value="ai_assisted">Declared AI assisted</option><option value="synthetic">Synthetic demonstration</option></select></div>
+    <div><label for="meta-reviewer">Reviewer label</label><input id="meta-reviewer" data-meta="reviewer_label" maxlength="200" autocomplete="off"></div>
+    <div><label for="meta-parameters">Generation parameters (JSON object)</label><textarea id="meta-parameters" data-meta="parameters_text" rows="3" spellcheck="false"></textarea></div>
+  </div></details>
+  <section class="panel"><div class="section-heading"><h2>Quality and coverage</h2><span id="metric-state" class="tag">Saved run</span></div><div id="metrics" aria-live="polite"></div><p class="muted small">An undefined rate has no scored denominator. Unscored and not-applicable judgments are never counted as wrong.</p></section>
+  <section class="panel"><h2>Case review</h2><div class="filters">
+    <div class="search"><label for="case-search">Search case ID or question</label><input id="case-search" type="search" placeholder="Find a case…" autocomplete="off"></div>
+    <div><label for="answerability-filter">Answerability</label><select id="answerability-filter"><option value="">All states</option><option value="supported">Supported</option><option value="insufficient_evidence">Insufficient evidence</option><option value="needs_clarification">Needs clarification</option></select></div>
+    <div><label for="synthetic-filter">Case type</label><select id="synthetic-filter"><option value="">All cases</option><option value="synthetic">Synthetic</option><option value="real">Real label</option></select></div>
+    <div><label for="outcome-filter">Response outcome</label><select id="outcome-filter"><option value="">All outcomes</option><option value="missing">Missing</option><option value="answered">Answered</option><option value="refused">Refused</option><option value="clarification_requested">Clarification requested</option></select></div>
+  </div><div class="case-layout"><div><p id="case-count" class="muted small"></p><div id="case-list" class="case-list" aria-label="Cases"></div><div class="pager"><button id="previous-page" class="subtle">Previous</button><span id="page-number"></span><button id="next-page" class="subtle">Next</button></div></div>
+  <article id="case-editor" hidden><div class="section-heading"><h3 id="case-id"></h3><span id="case-tags" class="tag"></span></div>
+    <h4>Question</h4><p id="case-question" class="preserve"></p><h4>Reference answer</h4><p id="case-reference" class="preserve"></p>
+    <details><summary>Evidence and recorded review state</summary><p id="case-review" class="muted small"></p><ol id="case-evidence"></ol><p class="muted small">Sources are shown as text; this workbench does not fetch them.</p></details>
+    <div class="editor-fields"><label for="outcome">Response outcome</label><select id="outcome"><option value="missing">Missing response</option><option value="answered">Answered</option><option value="refused">Refused</option><option value="clarification_requested">Clarification requested</option></select>
+    <label class="checkbox"><input id="prompt-default" type="checkbox">Use the exact case question as the prompt</label><label for="prompt">Complete prompt override</label><textarea id="prompt" rows="3" maxlength="1000000" disabled></textarea>
+    <label for="response">Supplied response</label><textarea id="response" rows="7" maxlength="1000000" placeholder="Paste a locally supplied response; no model is called."></textarea>
+    <p class="muted small">Changing the response, prompt, or outcome resets judgments for review. Refusal and clarification content axes are not applicable. A missing outcome requires empty response text.</p>
+    <div class="judgment-grid"><div><label for="judge-factual">Factual judgment</label><select id="judge-factual" data-axis="factual"></select></div><div><label for="judge-citation">Citation judgment</label><select id="judge-citation" data-axis="citation"></select></div><div><label for="judge-refusal">Refusal-decision judgment</label><select id="judge-refusal" data-axis="refusal_decision"></select></div></div>
+    <details><summary>Judgment guide</summary><p><strong>Correct:</strong> reviewed claims and required citations are supported, or the answer/refusal/clarification decision is appropriate to the case.</p><p><strong>Incorrect:</strong> a material contradiction, unsupported assertion, fabricated or required-but-missing citation, or inappropriate response decision.</p><p><strong>Unscored:</strong> unknown or not assessed. <strong>Not applicable:</strong> the axis is outside the response scope; it is not a passing score.</p><p>These labels are entered by the reviewer. The engine checks schema consistency and calculates metrics; it does not decide truth.</p></details>
+    </div>
+  </article></div></section>
+</div>
+<section id="comparison-panel" class="panel" hidden><div class="section-heading"><h2>Paired comparison</h2><button id="export-comparison" class="subtle">Export comparison</button></div><p id="comparison-label"></p><div id="comparison-result"></div><details><summary>Private per-case transitions</summary><div id="comparison-cases"></div></details><ul id="comparison-limits" class="muted small"></ul></section>
+</main></div>
+<footer>Chinese Evidence Bench · Local workbench alpha · Published fixtures are English and do not establish Chinese-language evaluation coverage.</footer>
+<script>/*__SCRIPT__*/</script>
+</body>
+</html>

@@ -4,7 +4,7 @@ Tools for checking factual accuracy, citation support, and refusal behavior in A
 
 ## Current status
 
-The repository implements a v1 case format, an offline JSON/JSONL validator, private evaluation-run preparation, deterministic scoring of supplied judgments, paired run comparison, and standard-library tests. It contains **8 public-fact cases** drawn from 5 original documents (see the [source review](docs/source-review.md)), plus 3 entirely fictional fixtures marked `synthetic`. An AI agent opened the original sources and checked the public cases individually. **There has been no independent human certification, model API integration, model experiment, or published evaluation score.** Offline scoring does not automatically establish factual truth or authenticate declared model and reviewer metadata.
+The repository implements a v1 case format, an offline JSON/JSONL validator, private evaluation-run preparation, deterministic scoring of supplied judgments, paired run comparison, a local browser workbench, and standard-library tests. It contains **8 public-fact cases** drawn from 5 original documents (see the [source review](docs/source-review.md)), plus 3 entirely fictional fixtures marked `synthetic`. An AI agent opened the original sources and checked the public cases individually. **There has been no independent human certification, model API integration, model experiment, or published evaluation score.** Offline scoring does not automatically establish factual truth or authenticate declared model and reviewer metadata.
 
 Published questions, answers, and documentation are in English. These English-language fixtures do not establish Chinese-language evaluation coverage; the validator accepts Unicode text without detecting its language. Future Chinese-language evaluation should use locally translated inputs kept outside version control unless the public language policy changes. Translations need their own review; their existence alone does not establish evaluation coverage.
 
@@ -32,7 +32,7 @@ The command accepts `.json` arrays of cases and `.jsonl` files with one case per
 
 Add `--summary` to append aggregate counts after the usual PASS line. Its `SUMMARY: ` prefix is followed by a JSON object with seven fixed keys: `real`, `synthetic`, `reviewed`, `pending`, `supported`, `insufficient_evidence`, and `needs_clarification`. Counts cover all supplied files, include zero values, and contain no case IDs, text, source URLs, or paths. Any validation error suppresses the summary; strict flags still apply. Counts describe record labels, not factual accuracy or independent human review.
 
-Passing validation establishes only that the format and state combinations are valid. It does not prove source authenticity, factual correctness, or the absence of personal information. Validation does not save inputs or run logs. No command accesses the network, reads environment secrets, or calls models; the explicit evaluation commands save private local artifacts. See the [v1 data format](docs/data-format.md) and [fixture notes](examples/README.md) for the complete rules and limitations.
+Passing validation establishes only that the format and state combinations are valid. It does not prove source authenticity, factual correctness, or the absence of personal information. Validation does not save inputs or run logs. No command fetches remote sources, reads environment secrets, or calls models; the workbench serves only a loopback browser session, and the explicit evaluation commands save private local artifacts. See the [v1 data format](docs/data-format.md) and [fixture notes](examples/README.md) for the complete rules and limitations.
 
 See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 
@@ -48,6 +48,18 @@ python3 -m evidence_bench score-run --dataset examples/synthetic.jsonl --run pri
 An untouched template produces only missing/unscored counts, never a measured model result. Defaults save into Git-ignored private directories with mode `0600` and refuse replacement. The strict run format binds every case to dataset/content hashes and preserves declared model settings, UTC capture time, prompts, answers, and review metadata. Use `compare-runs --dataset FILE --left LEFT-SCORE.json --right RIGHT-SCORE.json` to compare two saved scores on the same complete case set. Quality changes use only jointly scored pairs; coverage, excluded pairs, answerability/synthetic strata, and declared setup differences remain visible. Comparison is descriptive and does not establish a controlled experiment or significance.
 
 Console output exposes only fixed diagnostics and counts. See the [offline evaluation guide](docs/offline-evaluation.md) for complete schemas, scoring rules, reproduction, platform requirements, and privacy limits.
+
+## Local browser workbench
+
+Start a private session backed by the same Python validation, scoring, and comparison engine:
+
+```sh
+python3 -m evidence_bench workbench --dataset examples/synthetic.jsonl --as-of 2026-01-31
+```
+
+Open the printed `127.0.0.1` address manually. Create or import runs, search/filter cases, inspect reference evidence, edit supplied responses and judgments, preview quality/coverage, and explicitly save validated edits to server memory. Export saved runs or scored artifacts, or compare two saved runs with paired denominators, strata, setup differences and sample caveats. Stale revisions from another tab are rejected.
+
+The server does not persist files automatically, fetch sources or call models. Browser imports/exports retain authoritative Python numeric types and fingerprints. The page uses no cookies, telemetry or browser storage; capability-authenticated same-origin requests stay on numeric loopback. Browser downloads contain supplied data and use browser-controlled permissions, while the CLI private writer retains its separate `0600` guarantee. Stop the terminal process to end the session. See the [local workbench guide](docs/local-workbench.md) for workflows, bounds, packaging, security and privacy limits.
 
 ## Additional CLI options
 
