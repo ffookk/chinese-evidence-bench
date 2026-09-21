@@ -164,5 +164,12 @@ class MicroFeatureTests(unittest.TestCase):
         counts = self.stats(cases=[case])
         self.assertEqual((counts["source_references"], counts["unique_source_urls"]), (2, 1))
 
+    def test_batch_host_count(self):
+        case = self.fixture()
+        other = json.loads(json.dumps(case["evidence"][0]))
+        other["source_url"] = "https://second.invalid/rule"
+        case["evidence"].append(other)
+        self.assertEqual(self.stats(cases=[case])["unique_source_hosts"], 2)
+
 if __name__ == "__main__":
     unittest.main()

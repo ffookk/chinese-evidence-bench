@@ -60,6 +60,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `validate --stats` appends a `STATS: ` JSON object with aggregate counts after the full batch passes. It cannot be combined with `--json-summary`; it never includes IDs, URLs, or text.
 - Statistics distinguish `time_sensitive_cases` from `time_independent_cases`; these are declared labels, not freshness verification.
 - Statistics count source entries and distinct source URLs without disclosing URLs. Repeated evidence entries still count as separate references.
+- `unique_source_hosts` counts distinct hostnames across the batch. Different hosts do not necessarily mean independent sources.
 
 ## Problem
 
