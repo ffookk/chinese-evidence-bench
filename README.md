@@ -62,6 +62,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - Statistics count source entries and distinct source URLs without disclosing URLs. Repeated evidence entries still count as separate references.
 - `unique_source_hosts` counts distinct hostnames across the batch. Different hosts do not necessarily mean independent sources.
 - Statistics distinguish cases with zero, one, or multiple source entries; counts do not establish sufficiency or corroboration.
+- `locator_type_counts` reports source-entry counts for page, paragraph, section, table, and timestamp locators, never locator text.
 
 ## Problem
 
