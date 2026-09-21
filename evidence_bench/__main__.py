@@ -80,6 +80,7 @@ def main(argv=None):
     validate.add_argument("--require-reviewed", action="store_true", help="reject pending cases")
     validate.add_argument("--real-only", action="store_true", help="reject synthetic cases")
     validate.add_argument("--summary", action="store_true", help="print fixed-schema aggregate counts only after every input passes")
+    validate.add_argument("--quiet", action="store_true", help="suppress the ordinary success line")
     args = parser.parse_args(argv)
     seen = set()
     errors = 0
@@ -127,7 +128,8 @@ def main(argv=None):
     if errors:
         print(f"FAIL: {count} case(s), {errors} error(s).", file=sys.stderr)
         return 1
-    print(f"PASS: {count} case(s); format checks only. Factual support and privacy still require review.")
+    if not args.quiet:
+        print(f"PASS: {count} case(s); format checks only. Factual support and privacy still require review.")
     if args.summary:
         print("SUMMARY: " + json.dumps(summary))
     return 0
