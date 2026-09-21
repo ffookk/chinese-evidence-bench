@@ -97,3 +97,4 @@ These are content limits, not a hard ceiling on process/browser RAM: parsing, co
 - **Previous case** and **Next case** follow the current filters and ordering, moving the list page when needed. If the selected case is outside the filters, Next case starts at the first match.
 - The response character count updates while typing and switching cases. It counts Unicode code points, including spaces and line breaks, without modifying the response.
 - **Restore this case** asks before discarding only the selected case's draft. Other case edits and metadata edits remain intact.
+- **Swap baseline and candidate** exchanges the comparison selectors and clears any displayed comparison. Run comparison again explicitly to calculate the reversed direction.

@@ -73,7 +73,7 @@
     byId("remove-run").disabled = busy || changed || !hasRun;
     for (const id of ["save-run", "discard-run"]) byId(id).disabled = busy || !changed || !hasRun;
     for (const id of ["export-run", "export-score"]) byId(id).disabled = busy || changed || !hasRun;
-    for (const id of ["left-run", "right-run", "compare-runs"]) byId(id).disabled = busy || changed || !runs.length;
+    for (const id of ["left-run", "right-run", "compare-runs", "swap-runs"]) byId(id).disabled = busy || changed || !runs.length;
     byId("export-comparison").disabled = busy || changed || !comparisonSelection;
     for (const element of document.querySelectorAll("[data-meta]")) element.disabled = busy || !hasRun;
     for (const id of [...filterIds, "reset-filters", "page-size"]) byId(id).disabled = busy || !hasRun;
@@ -287,6 +287,7 @@
   byId("remove-run").addEventListener("click", () => { if (!window.confirm("Remove this saved run from server memory? Existing downloaded files will remain unchanged.")) return; act(async () => { await api("/api/remove", {key: view.key, revision: view.revision}); clearSelection(); await refreshRuns(); if (runs.length) loadView(await api("/api/select", {key: runs[0].key})); message("Removed the run from session memory."); }); });
   for (const [id, kind, filename] of [["export-run", "run", "evidence-bench-run.json"], ["export-score", "scored", "evidence-bench-scored.json"]]) byId(id).addEventListener("click", () => act(() => download("/api/export", {key: view.key, revision: view.revision, kind}, filename)));
   for (const id of ["left-run", "right-run"]) byId(id).addEventListener("change", clearComparison);
+  byId("swap-runs").addEventListener("click", () => { const left = byId("left-run").value; byId("left-run").value = byId("right-run").value; byId("right-run").value = left; clearComparison(); });
   byId("compare-runs").addEventListener("click", () => act(async () => {
     const left = runs.find(item => item.key === byId("left-run").value), right = runs.find(item => item.key === byId("right-run").value);
     const selection = {left_key: left.key, left_revision: left.revision, right_key: right.key, right_revision: right.revision};
