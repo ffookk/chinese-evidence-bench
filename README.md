@@ -39,6 +39,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 ## Additional CLI options
 
 - `python3 -m evidence_bench --version` reports the package version and supported schema, not a new release tag. Invalid arguments receive a fixed, value-free error message.
+- `validate --quiet` suppresses the ordinary PASS line. Explicit summaries and statistics remain visible; errors are retained.
 
 ## Problem
 
