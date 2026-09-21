@@ -84,3 +84,7 @@ No endpoint accepts a filesystem path or source URL. Only explicit startup datas
 These are content limits, not a hard ceiling on process/browser RAM: parsing, copies, response encoding and the UI use additional memory. The server closes every HTTP connection after its response. Strict JSON rejects duplicate keys, nonfinite numbers, malformed UTF-8 and unsupported nesting. Existing run/schema parameter and text limits still apply. Fixed errors contain schema context and record positions but do not echo supplied field values.
 
 `create_server(dataset)` supports programmatic local testing: it returns an unstarted bound server with `server_address` and `origin`. Call `serve_forever()` in a dedicated thread if needed, then `shutdown()` from another thread and `server_close()` to release it. The CLI serves in the foreground and closes the server on interruption. This is a single-user local alpha workbench, not a hosted service, multi-user authentication system, model runner or complete experiment-management platform.
+
+## Small review controls
+
+- **Reset case filters** clears the search and case filters and returns to the first page without changing any draft.

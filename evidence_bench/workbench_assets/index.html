@@ -50,7 +50,7 @@
     <div><label for="meta-parameters">Generation parameters (JSON object)</label><textarea id="meta-parameters" data-meta="parameters_text" rows="3" spellcheck="false"></textarea></div>
   </div></details>
   <section class="panel"><div class="section-heading"><h2>Quality and coverage</h2><span id="metric-state" class="tag">Saved run</span></div><div id="metrics" aria-live="polite"></div><p class="muted small">An undefined rate has no scored denominator. Unscored and not-applicable judgments are never counted as wrong.</p></section>
-  <section class="panel"><h2>Case review</h2><div class="filters">
+  <section class="panel"><div class="section-heading"><h2>Case review</h2><button id="reset-filters" class="subtle">Reset case filters</button></div><div class="filters">
     <div class="search"><label for="case-search">Search case ID or question</label><input id="case-search" type="search" placeholder="Find a case…" autocomplete="off"></div>
     <div><label for="answerability-filter">Answerability</label><select id="answerability-filter"><option value="">All states</option><option value="supported">Supported</option><option value="insufficient_evidence">Insufficient evidence</option><option value="needs_clarification">Needs clarification</option></select></div>
     <div><label for="synthetic-filter">Case type</label><select id="synthetic-filter"><option value="">All cases</option><option value="synthetic">Synthetic</option><option value="real">Real label</option></select></div>
