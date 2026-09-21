@@ -19,7 +19,7 @@ class MicroFeatureTests(unittest.TestCase):
             cases = [self.fixture()] if cases is None else cases
             path.write_text(content if content is not None else "\n".join(json.dumps(case) for case in cases), encoding="utf-8")
             argv = ["validate", *[str(path) if name == "file" else name for name in inputs], "--as-of", "2026-01-31", *options]
-            stream = io.BytesIO(stdin) if isinstance(stdin, bytes) else io.StringIO(stdin)
+            stream = stdin if stdin is None or hasattr(stdin, "read") else io.BytesIO(stdin) if isinstance(stdin, bytes) else io.StringIO(stdin)
             with contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()) as err, patch("sys.stdin", stream):
                 try:
                     result = main(argv)
@@ -103,6 +103,18 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--max-input-bytes", str(size), content=text)[0], 0)
         self.assertEqual(self.run_cli("--max-input-bytes", str(size - 1), content=text)[0], 1)
         self.assertEqual(self.run_cli("--max-input-bytes", "9" * 50)[0], 2)
+
+    def test_stdin_utf8_and_single_operand(self):
+        data = json.dumps(self.fixture()).encode("utf-8")
+        self.assertEqual(self.run_cli(inputs=("-",), stdin=data)[0], 0)
+        self.assertEqual(self.run_cli(inputs=("-", "-"), stdin=data)[0], 2)
+        self.assertEqual(self.run_cli(inputs=("-",), stdin=bytes([255]))[0], 1)
+        self.assertEqual(self.run_cli(inputs=("-",), stdin=None)[0], 1)
+        self.assertEqual(self.run_cli("--max-input-bytes", "1", inputs=("-",), stdin=data)[0], 1)
+        closed = io.StringIO()
+        closed.close()
+        self.assertEqual(self.run_cli(inputs=("-",), stdin=closed)[0], 1)
+        self.assertEqual(self.run_cli(inputs=("bad" + chr(0) + ".jsonl",))[0], 1)
 
 if __name__ == "__main__":
     unittest.main()

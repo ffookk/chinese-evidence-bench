@@ -32,7 +32,16 @@ def _decode(text):
 def read_cases(path, max_bytes=None):
     """Yield (position, case, error); JSONL errors do not hide later records."""
     try:
-        if max_bytes is not None:
+        if path == Path("-"):
+            if sys.stdin is None:
+                raise OSError
+            data = getattr(sys.stdin, "buffer", sys.stdin).read(-1 if max_bytes is None else max_bytes + 1)
+            data = data.encode("utf-8") if isinstance(data, str) else data
+            if max_bytes is not None and len(data) > max_bytes:
+                yield "file", None, "input exceeds the byte limit"
+                return
+            stream = io.StringIO(data.decode("utf-8"))
+        elif max_bytes is not None:
             with path.open("rb") as source:
                 data = source.read(max_bytes + 1)
             if len(data) > max_bytes:
@@ -42,7 +51,7 @@ def read_cases(path, max_bytes=None):
         else:
             stream = path.open(encoding="utf-8")
         with stream:
-            if path.suffix.lower() == ".jsonl":
+            if path == Path("-") or path.suffix.lower() == ".jsonl":
                 for line_no, line in enumerate(stream, 1):
                     if not line.strip():
                         continue
@@ -61,7 +70,7 @@ def read_cases(path, max_bytes=None):
                     return
                 for index, case in enumerate(cases, 1):
                     yield f"case {index}", case, None
-    except (OSError, UnicodeError):
+    except (OSError, UnicodeError, ValueError):
         yield "file", None, "cannot read input as UTF-8"
 
 
@@ -113,6 +122,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
+    if args.paths.count(Path("-")) > 1:
+        parser.error("standard input may be supplied only once")
     seen = set()
     errors = 0
     count = 0
@@ -124,7 +135,7 @@ def main(argv=None):
     previous_identifier = None
     seen_questions = set()
     for file_index, path in enumerate(args.paths, 1):
-        if path.suffix.lower() not in {".json", ".jsonl"}:
+        if path != Path("-") and path.suffix.lower() not in {".json", ".jsonl"}:
             print(f"input {file_index}: expected a .json or .jsonl extension", file=sys.stderr)
             errors += 1
             continue
