@@ -411,6 +411,11 @@ def add_commands(subparsers, as_of_type):
     score.add_argument("--dataset", action="append", type=Path, required=True)
     score.add_argument("--run", type=Path, required=True)
     score.add_argument("--output", type=Path, default=Path("private-output/scored-run.json"))
+    compare = subparsers.add_parser("compare-runs", help="compare two identity-verified scored runs on the same cases")
+    compare.add_argument("--dataset", action="append", type=Path, required=True)
+    compare.add_argument("--left", type=Path, required=True)
+    compare.add_argument("--right", type=Path, required=True)
+    compare.add_argument("--output", type=Path, default=Path("private-output/comparison.json"))
 
 
 def run_command(args):
@@ -427,6 +432,9 @@ def run_command(args):
             artifact = score_run(dataset, run)
             write_private_json(args.output, artifact)
             print(f"PASS: {len(dataset.cases)} case(s); private scored run saved. Supplied judgments are not independently verified.")
+        elif args.command == "compare-runs":
+            from .comparison import run_comparison
+            run_comparison(args)
         else:
             raise EvaluationError("unsupported evaluation command.")
         return 0
