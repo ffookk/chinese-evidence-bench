@@ -214,5 +214,12 @@ class MicroFeatureTests(unittest.TestCase):
         counts = self.stats(cases=[first, second])
         self.assertEqual([counts[key] for key in ("question_characters_min", "question_characters_max", "question_characters_total")], [3, 5, 8])
 
+    def test_answer_lengths(self):
+        first, second = self.fixture(), self.fixture()
+        first.update(id="first", reference_answer="A")
+        second.update(id="second", reference_answer="WORD")
+        counts = self.stats(cases=[first, second])
+        self.assertEqual([counts[key] for key in ("reference_answer_count", "answer_characters_min", "answer_characters_max", "answer_characters_total")], [2, 1, 4, 5])
+
 if __name__ == "__main__":
     unittest.main()

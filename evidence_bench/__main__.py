@@ -156,6 +156,7 @@ def main(argv=None):
     stats = {
         "files": len(args.paths),
         "cases": 0,
+        "reference_answer_count": 0, "answer_characters_min": 0, "answer_characters_max": 0, "answer_characters_total": 0,
         "question_characters_min": 0, "question_characters_max": 0, "question_characters_total": 0,
         "source_urls_used_by_multiple_cases": 0,
         "reviews_within_30_days": 0, "reviews_31_to_365_days": 0, "reviews_over_365_days": 0,
@@ -222,6 +223,12 @@ def main(argv=None):
             errors += len(problems)
             if args.stats and not problems:
                 stats["cases"] += 1
+                if case["reference_answer"] is not None:
+                    stats["reference_answer_count"] += 1
+                    length = len(case["reference_answer"])
+                    stats["answer_characters_min"] = length if stats["reference_answer_count"] == 1 else min(stats["answer_characters_min"], length)
+                    stats["answer_characters_max"] = max(stats["answer_characters_max"], length)
+                    stats["answer_characters_total"] += length
                 length = len(case["question"])
                 stats["question_characters_min"] = length if stats["cases"] == 1 else min(stats["question_characters_min"], length)
                 stats["question_characters_max"] = max(stats["question_characters_max"], length)
