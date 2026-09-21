@@ -90,6 +90,7 @@
     const pages = Math.max(1, Math.ceil((hasRun ? filteredCases().length : 0) / pageSize));
     byId("previous-page").disabled = busy || page <= 0;
     byId("next-page").disabled = busy || page + 1 >= pages;
+    caseNavigation();
   }
   function baseMetadata() {
     return {run_id: view.run.run_id, created_at: view.run.created_at, model_label: view.run.generation.model_label,
@@ -165,6 +166,11 @@
     const order = byId("case-sort").value;
     return filtered.sort((a, b) => order === "question" ? a.question.localeCompare(b.question, "en") || a.id.localeCompare(b.id, "en") : (order === "descending" ? -1 : 1) * a.id.localeCompare(b.id, "en"));
   }
+  function caseNavigation() {
+    const filtered = view ? filteredCases() : [], index = filtered.findIndex(item => item.id === selectedCase);
+    byId("previous-case").disabled = busy || index <= 0; byId("next-case").disabled = busy || index + 1 >= filtered.length;
+    byId("case-position").textContent = index < 0 ? "Selected case is outside the filters" : "Match " + (index + 1) + " of " + filtered.length;
+  }
   function renderCases() {
     if (!view) return;
     const filtered = filteredCases(), pages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -177,6 +183,7 @@
       button.addEventListener("click", () => { selectedCase = item.id; renderCases(); renderEditor(); }); list.append(button);
     }
     if (!filtered.length) list.append(node("p", "No cases match these filters. Clear a filter to see more cases.", "muted"));
+    caseNavigation();
     byId("page-number").textContent = (page + 1) + " / " + pages;
     byId("previous-page").disabled = busy || page === 0; byId("next-page").disabled = busy || page + 1 >= pages;
   }
@@ -254,6 +261,10 @@
   for (const id of filterIds) byId(id).addEventListener("input", () => { page = 0; renderCases(); });
   byId("reset-filters").addEventListener("click", () => { for (const id of filterIds) byId(id).value = ""; page = 0; renderCases(); });
   byId("page-size").addEventListener("change", () => { pageSize = Number(byId("page-size").value); page = 0; renderCases(); });
+  for (const [id, direction] of [["previous-case", -1], ["next-case", 1]]) byId(id).addEventListener("click", () => {
+    const filtered = filteredCases(), index = filtered.findIndex(item => item.id === selectedCase) + direction, item = filtered[index];
+    if (!item) return; selectedCase = item.id; page = Math.floor(index / pageSize); renderCases(); renderEditor();
+  });
   byId("previous-page").addEventListener("click", () => { page--; renderCases(); });
   byId("next-page").addEventListener("click", () => { page++; renderCases(); });
   byId("create-run").addEventListener("click", () => act(async () => { const result = await api("/api/create", {run_id: byId("new-run-id").value, model_label: byId("new-model").value}); loadView(result); await refreshRuns(); byId("right-run").value = view.key; message("Created a complete unscored run in memory. No model was called."); }));
