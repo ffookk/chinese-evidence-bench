@@ -171,5 +171,13 @@ class MicroFeatureTests(unittest.TestCase):
         case["evidence"].append(other)
         self.assertEqual(self.stats(cases=[case])["unique_source_hosts"], 2)
 
+    def test_evidence_coverage_counts(self):
+        none, one, many = self.fixture(), self.fixture(), self.fixture()
+        none.update(id="none", evidence=[], answerability="needs_clarification", reference_answer=None)
+        one["id"], many["id"] = "one", "many"
+        many["evidence"] *= 2
+        counts = self.stats(cases=[none, one, many])
+        self.assertEqual([counts[key] for key in ("cases_without_sources", "cases_with_one_source", "cases_with_multiple_sources")], [1, 1, 1])
+
 if __name__ == "__main__":
     unittest.main()
