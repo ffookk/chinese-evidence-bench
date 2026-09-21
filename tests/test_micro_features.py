@@ -97,5 +97,12 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli(cases=[left, right])[0], 0)
         self.assertEqual(self.run_cli("--unique-questions", cases=[left, right])[0], 1)
 
+    def test_input_byte_limit(self):
+        text = json.dumps(self.fixture(), ensure_ascii=False)
+        size = len(text.encode("utf-8"))
+        self.assertEqual(self.run_cli("--max-input-bytes", str(size), content=text)[0], 0)
+        self.assertEqual(self.run_cli("--max-input-bytes", str(size - 1), content=text)[0], 1)
+        self.assertEqual(self.run_cli("--max-input-bytes", "9" * 50)[0], 2)
+
 if __name__ == "__main__":
     unittest.main()

@@ -3,6 +3,7 @@
 import argparse
 from datetime import date
 import json
+import io
 from pathlib import Path
 import sys
 from urllib.parse import urlsplit
@@ -28,10 +29,19 @@ def _decode(text):
     return json.loads(text, object_pairs_hook=_strict_object, parse_constant=_reject_constant)
 
 
-def read_cases(path):
+def read_cases(path, max_bytes=None):
     """Yield (position, case, error); JSONL errors do not hide later records."""
     try:
-        with path.open(encoding="utf-8") as stream:
+        if max_bytes is not None:
+            with path.open("rb") as source:
+                data = source.read(max_bytes + 1)
+            if len(data) > max_bytes:
+                yield "file", None, "input exceeds the byte limit"
+                return
+            stream = io.StringIO(data.decode("utf-8"))
+        else:
+            stream = path.open(encoding="utf-8")
+        with stream:
             if path.suffix.lower() == ".jsonl":
                 for line_no, line in enumerate(stream, 1):
                     if not line.strip():
@@ -99,6 +109,7 @@ def main(argv=None):
     validate.add_argument("--id-prefix", help="require every case identifier to start with this prefix")
     validate.add_argument("--sorted-ids", action="store_true", help="require ascending identifiers across all inputs")
     validate.add_argument("--unique-questions", action="store_true", help="reject repeated normalized question wording")
+    validate.add_argument("--max-input-bytes", type=_count, help="maximum bytes read from each input")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -118,7 +129,7 @@ def main(argv=None):
             errors += 1
             continue
         records = 0
-        for position, case, error in read_cases(path):
+        for position, case, error in read_cases(path, args.max_input_bytes):
             prefix = f"input {file_index}, {position}"
             if error:
                 print(f"{prefix}: {error}", file=sys.stderr)
