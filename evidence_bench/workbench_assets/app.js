@@ -81,6 +81,7 @@
     byId("outcome").disabled = busy || !record;
     byId("prompt-default").disabled = busy || !record;
     byId("prompt").disabled = busy || !record || record.prompt_override === null;
+    byId("response-count").textContent = "Response characters: " + Array.from(record?.response_text || "").length + " (Unicode code points).";
     byId("response").disabled = busy || !record || record.outcome === "missing";
     for (const element of document.querySelectorAll("[data-axis]")) {
       element.disabled = busy || !record || record.outcome === "missing" || (element.dataset.axis !== "refusal_decision" && record.outcome !== "answered");
