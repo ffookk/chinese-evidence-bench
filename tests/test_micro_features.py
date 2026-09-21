@@ -137,5 +137,11 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(set(records[0]), {"location", "message"})
         self.assertNotIn("private-input-marker", err)
 
+    def test_diagnostic_limit(self):
+        result, out, err = self.run_cli("--max-diagnostics", "0", content="broken\nalso broken")
+        self.assertEqual((result, out), (1, ""))
+        self.assertEqual(err, "FAIL: 0 case(s), 3 error(s).\n")
+        self.assertEqual(len(self.run_cli("--max-diagnostics", "1", content="broken")[2].splitlines()), 2)
+
 if __name__ == "__main__":
     unittest.main()
