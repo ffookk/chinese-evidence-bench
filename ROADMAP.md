@@ -1,6 +1,6 @@
 # Roadmap
 
-Completed items are checked below. Fictional format fixtures do not count as real benchmark data. Model evaluation and experiments remain unimplemented. Published fixtures are in English and do not provide Chinese-language evaluation coverage.
+Completed items are checked below. Fictional format fixtures do not count as real benchmark data. Offline scoring of supplied responses is implemented; model invocation and actual experiments remain unimplemented. Published fixtures are in English and do not provide Chinese-language evaluation coverage.
 
 ## PR 1: Data format and initial cases
 
@@ -15,9 +15,10 @@ Acceptance: each answer can be traced to supporting original evidence; the valid
 
 ## PR 2: Reproducible evaluation
 
-- [ ] Save model identifiers, inputs, outputs, run parameters, and timestamps.
-- [ ] Define factual errors, citation errors, correct refusals, and unnecessary refusals separately.
-- [ ] Report answer coverage and publish human scoring rules and edge cases.
+- [x] Define a strict offline run format that saves declared model labels, complete prompt overrides (or exact dataset-question defaults), supplied outputs, finite generation parameters, UTC capture times, and review metadata in private artifacts.
+- [x] Recalculate deterministic factual, citation, and refusal-decision metrics with explicit denominators, separate unscored/not-applicable counts, and case/dataset identity checks.
+- [x] Report answer and response coverage and publish manual scoring rules and edge cases in the [offline evaluation guide](docs/offline-evaluation.md).
+- [ ] Integrate actual model invocation and capture its complete execution provenance; current generation and review metadata are declarations, not authenticated model runs or human certification.
 
 Acceptance: another contributor can recalculate the same scores from saved run records. Distinguish reproducible scoring from reproducibility of stochastic model generation.
 

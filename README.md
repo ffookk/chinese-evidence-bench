@@ -4,7 +4,7 @@ Tools for checking factual accuracy, citation support, and refusal behavior in A
 
 ## Current status
 
-The repository implements a v1 case format, an offline JSON/JSONL validator, and standard-library tests. It contains **8 public-fact cases** drawn from 5 original documents (see the [source review](docs/source-review.md)), plus 3 entirely fictional fixtures marked `synthetic`. An AI agent opened the original sources and checked the public cases individually. **There has been no independent human certification, model evaluation runner, model experiment, or published evaluation score.**
+The repository implements a v1 case format, an offline JSON/JSONL validator, private evaluation-run preparation, deterministic scoring of supplied judgments, and standard-library tests. It contains **8 public-fact cases** drawn from 5 original documents (see the [source review](docs/source-review.md)), plus 3 entirely fictional fixtures marked `synthetic`. An AI agent opened the original sources and checked the public cases individually. **There has been no independent human certification, model API integration, model experiment, or published evaluation score.** Offline scoring does not automatically establish factual truth or authenticate declared model and reviewer metadata.
 
 Published questions, answers, and documentation are in English. These English-language fixtures do not establish Chinese-language evaluation coverage; the validator accepts Unicode text without detecting its language. Future Chinese-language evaluation should use locally translated inputs kept outside version control unless the public language policy changes. Translations need their own review; their existence alone does not establish evaluation coverage.
 
@@ -32,9 +32,20 @@ The command accepts `.json` arrays of cases and `.jsonl` files with one case per
 
 Add `--summary` to append aggregate counts after the usual PASS line. Its `SUMMARY: ` prefix is followed by a JSON object with seven fixed keys: `real`, `synthetic`, `reviewed`, `pending`, `supported`, `insufficient_evidence`, and `needs_clarification`. Counts cover all supplied files, include zero values, and contain no case IDs, text, source URLs, or paths. Any validation error suppresses the summary; strict flags still apply. Counts describe record labels, not factual accuracy or independent human review.
 
-Passing validation establishes only that the format and state combinations are valid. It does not prove source authenticity, factual correctness, or the absence of personal information. The tool does not access the network, read environment variables, call models, or save inputs or run logs. See the [v1 data format](docs/data-format.md) and [fixture notes](examples/README.md) for the complete rules and limitations.
+Passing validation establishes only that the format and state combinations are valid. It does not prove source authenticity, factual correctness, or the absence of personal information. Validation does not save inputs or run logs. No command accesses the network, reads environment secrets, or calls models; the explicit evaluation commands save private local artifacts. See the [v1 data format](docs/data-format.md) and [fixture notes](examples/README.md) for the complete rules and limitations.
 
 See [input and diagnostic notes](docs/usage-notes.md) for more command details.
+
+## Offline evaluation
+
+Prepare a private template, supply local responses and review judgments, then recalculate quality and coverage with explicit denominators:
+
+```sh
+python3 -m evidence_bench prepare-run --dataset examples/synthetic.jsonl --as-of 2026-01-31
+python3 -m evidence_bench score-run --dataset examples/synthetic.jsonl --run private-input/run.json
+```
+
+An untouched template produces only missing/unscored counts, never a measured model result. Defaults save into Git-ignored private directories with mode `0600` and refuse replacement. The strict run format binds every case to dataset/content hashes and preserves declared model settings, UTC capture time, prompts, answers, and review metadata. Console output exposes only fixed diagnostics and counts. See the [offline evaluation guide](docs/offline-evaluation.md) for complete schemas, scoring rules, reproduction, platform requirements, and privacy limits.
 
 ## Additional CLI options
 
@@ -104,7 +115,7 @@ All fields are required. Use `null` for nullable values. The [v1 data format](do
 - **Factual accuracy:** whether verifiable claims agree with the evidence.
 - **Citation support:** whether citations exist and support their associated claims.
 - **Refusal behavior:** whether the model appropriately declines when evidence is insufficient, or unnecessarily declines when it is sufficient.
-- **Answer coverage:** the proportion of valid answers, reported alongside quality metrics.
+- **Answer coverage:** the proportion of cases labelled answered, reported alongside quality metrics; response availability does not establish answer validity.
 - **Experiment cost:** the applicable time, token, or monetary measures and their calculation methods.
 
 Define scoring rules, denominators, and edge cases before running experiments. Increased refusal must not conceal quality problems.
