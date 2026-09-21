@@ -207,5 +207,12 @@ class MicroFeatureTests(unittest.TestCase):
         second["id"] = "second-case"
         self.assertEqual(self.stats(cases=[first, second])["source_urls_used_by_multiple_cases"], 1)
 
+    def test_question_lengths(self):
+        first, second = self.fixture(), self.fixture()
+        first.update(id="first", question="A B")
+        second.update(id="second", question="ABCDE")
+        counts = self.stats(cases=[first, second])
+        self.assertEqual([counts[key] for key in ("question_characters_min", "question_characters_max", "question_characters_total")], [3, 5, 8])
+
 if __name__ == "__main__":
     unittest.main()

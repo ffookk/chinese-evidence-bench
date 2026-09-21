@@ -156,6 +156,7 @@ def main(argv=None):
     stats = {
         "files": len(args.paths),
         "cases": 0,
+        "question_characters_min": 0, "question_characters_max": 0, "question_characters_total": 0,
         "source_urls_used_by_multiple_cases": 0,
         "reviews_within_30_days": 0, "reviews_31_to_365_days": 0, "reviews_over_365_days": 0,
         "real_reviewed_cases": 0, "real_pending_cases": 0,
@@ -221,6 +222,10 @@ def main(argv=None):
             errors += len(problems)
             if args.stats and not problems:
                 stats["cases"] += 1
+                length = len(case["question"])
+                stats["question_characters_min"] = length if stats["cases"] == 1 else min(stats["question_characters_min"], length)
+                stats["question_characters_max"] = max(stats["question_characters_max"], length)
+                stats["question_characters_total"] += length
                 if case["verified_at"] is not None:
                     age = (args.as_of - date.fromisoformat(case["verified_at"])).days
                     bucket = "reviews_within_30_days" if age <= 30 else "reviews_31_to_365_days" if age <= 365 else "reviews_over_365_days"
