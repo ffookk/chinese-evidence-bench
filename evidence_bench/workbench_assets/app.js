@@ -11,6 +11,7 @@
   let cases = [], runs = [], view = null, selectedCase = null, page = 0, busy = false;
   let records = new Map(), drafts = new Map(), metadata = {}, previewGeneration = 0, previewTimer = null, comparisonSelection = null;
   const pageSize = 20;
+  const filterIds = ["case-search", "answerability-filter", "synthetic-filter", "outcome-filter"];
   const dirty = () => drafts.size > 0 || Object.keys(metadata).length > 0;
   const clone = value => structuredClone(value);
   const currentRecord = () => drafts.get(selectedCase) || records.get(selectedCase);
@@ -75,7 +76,7 @@
     for (const id of ["left-run", "right-run", "compare-runs"]) byId(id).disabled = busy || changed || !runs.length;
     byId("export-comparison").disabled = busy || changed || !comparisonSelection;
     for (const element of document.querySelectorAll("[data-meta]")) element.disabled = busy || !hasRun;
-    for (const id of ["case-search", "answerability-filter", "synthetic-filter", "outcome-filter"]) byId(id).disabled = busy || !hasRun;
+    for (const id of [...filterIds, "reset-filters"]) byId(id).disabled = busy || !hasRun;
     for (const element of byId("case-list").querySelectorAll("button")) element.disabled = busy;
     byId("outcome").disabled = busy || !record;
     byId("prompt-default").disabled = busy || !record;
@@ -245,7 +246,8 @@
     record.outcome = outcome; if (outcome === "missing") record.response_text = "";
     resetJudgments(record); setDraft(record); renderEditor();
   });
-  for (const id of ["case-search", "answerability-filter", "synthetic-filter", "outcome-filter"]) byId(id).addEventListener("input", () => { page = 0; renderCases(); });
+  for (const id of filterIds) byId(id).addEventListener("input", () => { page = 0; renderCases(); });
+  byId("reset-filters").addEventListener("click", () => { for (const id of filterIds) byId(id).value = ""; page = 0; renderCases(); });
   byId("previous-page").addEventListener("click", () => { page--; renderCases(); });
   byId("next-page").addEventListener("click", () => { page++; renderCases(); });
   byId("create-run").addEventListener("click", () => act(async () => { const result = await api("/api/create", {run_id: byId("new-run-id").value, model_label: byId("new-model").value}); loadView(result); await refreshRuns(); byId("right-run").value = view.key; message("Created a complete unscored run in memory. No model was called."); }));
