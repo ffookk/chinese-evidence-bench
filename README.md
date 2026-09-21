@@ -41,6 +41,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `python3 -m evidence_bench --version` reports the package version and supported schema, not a new release tag. Invalid arguments receive a fixed, value-free error message.
 - `validate --quiet` suppresses the ordinary PASS line. Explicit summaries and statistics remain visible; errors are retained.
 - `validate --json-summary` emits only the same seven counters as one JSON object. It cannot be combined with `--summary`.
+- `validate --expect-cases N` requires exactly N parsed cases. Numeric limits accept 1–9 ASCII decimal digits; errors still suppress every report.
 
 ## Problem
 

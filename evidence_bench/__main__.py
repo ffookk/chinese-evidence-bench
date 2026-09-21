@@ -54,6 +54,12 @@ def read_cases(path):
         yield "file", None, "cannot read input as UTF-8"
 
 
+def _count(value):
+    if not value.isascii() or not value.isdecimal() or len(value) > 9:
+        raise ValueError
+    return int(value)
+
+
 def _as_of(value):
     try:
         parsed = date.fromisoformat(value)
@@ -82,6 +88,7 @@ def main(argv=None):
     validate.add_argument("--summary", action="store_true", help="print fixed-schema aggregate counts only after every input passes")
     validate.add_argument("--quiet", action="store_true", help="suppress the ordinary success line")
     validate.add_argument("--json-summary", action="store_true", help="emit only the seven summary counters as JSON")
+    validate.add_argument("--expect-cases", type=_count, help="require this nonnegative total case count")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -128,6 +135,9 @@ def main(argv=None):
         if records == 0:
             print(f"input {file_index}: no readable case records", file=sys.stderr)
             errors += 1
+    if args.expect_cases is not None and count != args.expect_cases:
+        print("batch: case count does not match the requested total", file=sys.stderr)
+        errors += 1
     if errors:
         print(f"FAIL: {count} case(s), {errors} error(s).", file=sys.stderr)
         return 1

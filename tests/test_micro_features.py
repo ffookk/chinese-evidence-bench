@@ -44,5 +44,12 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(len(json.loads(out)), 7)
         self.assertEqual(self.run_cli("--json-summary", "--summary")[0], 2)
 
+    def test_expected_count(self):
+        self.assertEqual(self.run_cli("--expect-cases", "1")[0], 0)
+        self.assertEqual(self.run_cli("--expect-cases", "2", "--summary")[1], "")
+        result, out, err = self.run_cli("--expect-cases", "private-argument-marker")
+        self.assertEqual(result, 2)
+        self.assertNotIn("private-argument-marker", out + err)
+
 if __name__ == "__main__":
     unittest.main()
