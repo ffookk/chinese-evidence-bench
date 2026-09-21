@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 from unittest.mock import patch
 from evidence_bench import __version__
-from evidence_bench.__main__ import main
+from evidence_bench.__main__ import cli, main
 
 
 class MicroFeatureTests(unittest.TestCase):
@@ -229,6 +229,11 @@ class MicroFeatureTests(unittest.TestCase):
             cases.append(case)
         counts = self.stats(cases=cases)
         self.assertEqual([counts[key] for key in ("applicable_dates_within_30_days", "applicable_dates_31_to_365_days", "applicable_dates_over_365_days")], [1, 1, 1])
+
+    def test_safe_interruption(self):
+        with patch("evidence_bench.__main__.main", side_effect=KeyboardInterrupt), contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(cli([]), 130)
+        self.assertEqual(err.getvalue(), "Interrupted; no complete validation result.\n")
 
 if __name__ == "__main__":
     unittest.main()

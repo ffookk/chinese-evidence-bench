@@ -69,6 +69,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - Question-length statistics count Unicode code points, including whitespace, and report minimum, maximum, and total. They are not token counts.
 - Reference-answer length statistics exclude null answers and count Unicode code points, not tokens. Count and lengths are zero when no reference answers exist.
 - Applicable-date age buckets use `valid_as_of`, separately from review age. They describe recorded dates and do not prove a fact remains valid today.
+- An interrupted CLI run exits with code 130 and a fixed message instead of a traceback.
 
 ## Problem
 

@@ -280,5 +280,13 @@ def main(argv=None):
     return 0
 
 
+def cli(argv=None):
+    try:
+        return main(argv)
+    except KeyboardInterrupt:
+        print("Interrupted; no complete validation result.", file=sys.stderr)
+        return 130
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(cli())
