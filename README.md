@@ -66,6 +66,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `real_reviewed_cases` and `real_pending_cases` count records labelled real. Neither label proves factual truth or independent human review.
 - Review-age buckets are 0–30, 31–365, and over 365 days relative to `--as-of`; they do not refetch or independently review sources.
 - `source_urls_used_by_multiple_cases` counts URLs shared across cases, not duplicate references within a single case. It is a coverage aid, not a dependence test.
+- Question-length statistics count Unicode code points, including whitespace, and report minimum, maximum, and total. They are not token counts.
 
 ## Problem
 
