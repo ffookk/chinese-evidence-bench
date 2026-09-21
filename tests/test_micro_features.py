@@ -154,5 +154,9 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--stats", "--json-summary")[0], 2)
         self.assertEqual(self.run_cli("--stats", content="broken")[1], "")
 
+    def test_temporal_label_counts(self):
+        counts = self.stats()
+        self.assertEqual((counts["time_sensitive_cases"], counts["time_independent_cases"]), (1, 0))
+
 if __name__ == "__main__":
     unittest.main()
