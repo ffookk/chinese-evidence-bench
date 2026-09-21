@@ -97,6 +97,7 @@ def main(argv=None):
     validate.add_argument("--source-host", action="append", default=[], help="allowed source hostname; repeat to allow more hosts")
     validate.add_argument("--min-source-hosts", type=_count, help="minimum distinct evidence hostnames per case")
     validate.add_argument("--id-prefix", help="require every case identifier to start with this prefix")
+    validate.add_argument("--sorted-ids", action="store_true", help="require ascending identifiers across all inputs")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -108,6 +109,7 @@ def main(argv=None):
         "reviewed": 0, "pending": 0,
         "supported": 0, "insufficient_evidence": 0, "needs_clarification": 0,
     }
+    previous_identifier = None
     for file_index, path in enumerate(args.paths, 1):
         if path.suffix.lower() not in {".json", ".jsonl"}:
             print(f"input {file_index}: expected a .json or .jsonl extension", file=sys.stderr)
@@ -147,6 +149,10 @@ def main(argv=None):
                 problems.append("evidence: fewer than the required distinct source hosts")
             if args.id_prefix is not None and not problems and not case["id"].startswith(args.id_prefix):
                 problems.append("id: does not use the required prefix")
+            if args.sorted_ids and not problems:
+                if previous_identifier is not None and case["id"] < previous_identifier:
+                    problems.append("id: identifiers are not in ascending order")
+                previous_identifier = case["id"]
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)

@@ -84,5 +84,11 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(result, 1)
         self.assertNotIn("private-id-marker", out + err)
 
+    def test_sorted_identifiers(self):
+        left, right = self.fixture(), self.fixture()
+        left["id"], right["id"] = "aaa", "bbb"
+        self.assertEqual(self.run_cli("--sorted-ids", cases=[left, right])[0], 0)
+        self.assertEqual(self.run_cli("--sorted-ids", cases=[right, left])[0], 1)
+
 if __name__ == "__main__":
     unittest.main()

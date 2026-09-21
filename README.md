@@ -49,6 +49,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - Repeat `validate --source-host HOST` to allow specific hostnames, compared without case differences. Empty evidence remains allowed by the schema unless another gate requires it.
 - `validate --min-source-hosts N` checks distinct hostname count per case, not source independence or factual corroboration.
 - `validate --id-prefix PREFIX` requires an exact case-sensitive identifier prefix without exposing identifiers in reports.
+- `validate --sorted-ids` checks ascending IDs across file boundaries in the supplied argument order; it does not reorder data.
 
 ## Problem
 
