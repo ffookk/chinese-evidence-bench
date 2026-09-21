@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chinese-evidence-bench"
+dynamic = ["version"]
+description = "Offline evidence validation, supplied-judgment scoring, and a local browser workbench"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+evidence-bench = "evidence_bench.__main__:cli"
+
+[tool.setuptools.dynamic]
+version = {attr = "evidence_bench.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["evidence_bench"]
+namespaces = false
+
+[tool.setuptools.package-data]
+evidence_bench = ["workbench_assets/*.html", "workbench_assets/*.js", "workbench_assets/*.css"]

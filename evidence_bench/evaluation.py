@@ -400,6 +400,9 @@ def write_private_json(path, value):
 
 
 def add_commands(subparsers, as_of_type):
+    workbench = subparsers.add_parser("workbench", help="start a private local browser evaluation session")
+    workbench.add_argument("--dataset", action="append", type=Path, required=True)
+    workbench.add_argument("--as-of", type=as_of_type, default=date.today())
     prepare = subparsers.add_parser("prepare-run", help="create a private, unscored offline run template")
     prepare.add_argument("--dataset", action="append", type=Path, required=True)
     prepare.add_argument("--as-of", type=as_of_type, default=date.today())
@@ -420,7 +423,10 @@ def add_commands(subparsers, as_of_type):
 
 def run_command(args):
     try:
-        if args.command == "prepare-run":
+        if args.command == "workbench":
+            from .workbench import run_workbench
+            run_workbench(args)
+        elif args.command == "prepare-run":
             dataset = load_dataset(args.dataset, args.as_of.isoformat())
             run = prepare_run(dataset, run_id=args.run_id, model_label=args.model_label, created_at=args.created_at)
             write_private_json(args.output, run)

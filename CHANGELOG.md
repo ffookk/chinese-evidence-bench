@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0-alpha.1
+
+- Add a complete local browser workbench backed by the existing Python run validator, scorer and comparison engine: create/import runs, search/filter cases, inspect reference evidence, edit prompts/responses/judgments, preview metrics, explicitly save revisions in memory, and export authoritative artifacts.
+- Display paired quality and coverage denominators, excluded pairs, strata, setup and applicability-label changes, and private per-case transitions. Preserve raw parameter JSON types through imports, unrelated edits and downloads.
+- Constrain the server to ephemeral numeric loopback with exact origin/host checks, session capabilities, fixed CSP hashes, no request logs or automatic persistence, bounded content and revision-conflict handling. Browser downloads use browser-controlled locations and permissions.
+- Include the HTML, JavaScript and CSS assets in package builds and add the installed `evidence-bench` command. Existing case/run schemas and validation defaults are unchanged.
+
+This remains an offline supplied-judgment tool. It does not call models, automatically verify truth, authenticate declarations, certify human review, or establish measured model improvement.
+
 ## 0.2.0-alpha.1
 
 - Add private offline run preparation and deterministic scoring of supplied responses and manual or declared assisted judgments. Strict schemas retain declared generation/review metadata and prompt overrides, bind complete records to dataset/case hashes, and separate unknown judgments from incorrect ones.

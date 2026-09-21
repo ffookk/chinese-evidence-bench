@@ -22,6 +22,13 @@ Acceptance: each answer can be traced to supporting original evidence; the valid
 
 Acceptance: another contributor can recalculate the same scores from saved run records. Distinguish reproducible scoring from reproducibility of stochastic model generation.
 
+## Local evaluation workbench
+
+- [x] Add a loopback-only browser interface for complete case review, supplied response/judgment editing, authoritative draft metrics, explicit in-memory saves, raw JSON import/export, and paired saved-run comparison.
+- [x] Preserve strict Python schemas, dataset identity and numeric parameter types; reject stale revisions and bound requests/session content without automatic persistence or external requests.
+- [x] Package the local UI assets and document session, download and local-process security boundaries.
+- [ ] Integrate actual model generation, independently reviewed evaluation data and controlled experiments; a browser workbench does not establish those results.
+
 ## PR 3: An improvement experiment
 
 - [x] Add deterministic paired comparison of verified offline runs on the same dataset, with jointly scored denominators, coverage changes, answerability/synthetic strata, private per-case transitions, and declared setup differences. This is analysis infrastructure, not a completed model or retrieval experiment.
