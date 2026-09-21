@@ -156,6 +156,7 @@ def main(argv=None):
     stats = {
         "files": len(args.paths),
         "cases": 0,
+        "source_urls_used_by_multiple_cases": 0,
         "reviews_within_30_days": 0, "reviews_31_to_365_days": 0, "reviews_over_365_days": 0,
         "real_reviewed_cases": 0, "real_pending_cases": 0,
         "locator_type_counts": {kind: 0 for kind in sorted(LOCATOR_TYPES)},
@@ -166,6 +167,7 @@ def main(argv=None):
     }
     source_urls = set()
     source_hosts = set()
+    reused_source_urls = set()
     for file_index, path in enumerate(args.paths, 1):
         if args.input_format is None and path != Path("-") and path.suffix.lower() not in {".json", ".jsonl"}:
             report("expected a .json or .jsonl extension", f"input {file_index}")
@@ -233,7 +235,10 @@ def main(argv=None):
                 source_hosts.update(urlsplit(source["source_url"]).hostname for source in case["evidence"])
                 stats["unique_source_hosts"] = len(source_hosts)
                 stats["source_references"] += len(case["evidence"])
-                source_urls.update(source["source_url"] for source in case["evidence"])
+                case_urls = {source["source_url"] for source in case["evidence"]}
+                reused_source_urls.update(case_urls & source_urls)
+                source_urls.update(case_urls)
+                stats["source_urls_used_by_multiple_cases"] = len(reused_source_urls)
                 stats["unique_source_urls"] = len(source_urls)
                 stats["time_sensitive_cases" if case["time_sensitive"] else "time_independent_cases"] += 1
             if (args.summary or args.json_summary) and not problems:
