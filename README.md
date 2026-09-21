@@ -68,6 +68,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `source_urls_used_by_multiple_cases` counts URLs shared across cases, not duplicate references within a single case. It is a coverage aid, not a dependence test.
 - Question-length statistics count Unicode code points, including whitespace, and report minimum, maximum, and total. They are not token counts.
 - Reference-answer length statistics exclude null answers and count Unicode code points, not tokens. Count and lengths are zero when no reference answers exist.
+- Applicable-date age buckets use `valid_as_of`, separately from review age. They describe recorded dates and do not prove a fact remains valid today.
 
 ## Problem
 

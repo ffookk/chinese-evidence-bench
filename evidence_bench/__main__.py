@@ -156,6 +156,7 @@ def main(argv=None):
     stats = {
         "files": len(args.paths),
         "cases": 0,
+        "applicable_dates_within_30_days": 0, "applicable_dates_31_to_365_days": 0, "applicable_dates_over_365_days": 0,
         "reference_answer_count": 0, "answer_characters_min": 0, "answer_characters_max": 0, "answer_characters_total": 0,
         "question_characters_min": 0, "question_characters_max": 0, "question_characters_total": 0,
         "source_urls_used_by_multiple_cases": 0,
@@ -223,6 +224,10 @@ def main(argv=None):
             errors += len(problems)
             if args.stats and not problems:
                 stats["cases"] += 1
+                if case["valid_as_of"] is not None:
+                    age = (args.as_of - date.fromisoformat(case["valid_as_of"])).days
+                    bucket = "applicable_dates_within_30_days" if age <= 30 else "applicable_dates_31_to_365_days" if age <= 365 else "applicable_dates_over_365_days"
+                    stats[bucket] += 1
                 if case["reference_answer"] is not None:
                     stats["reference_answer_count"] += 1
                     length = len(case["reference_answer"])
