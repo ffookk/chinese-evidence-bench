@@ -81,7 +81,10 @@ def main(argv=None):
     validate.add_argument("--real-only", action="store_true", help="reject synthetic cases")
     validate.add_argument("--summary", action="store_true", help="print fixed-schema aggregate counts only after every input passes")
     validate.add_argument("--quiet", action="store_true", help="suppress the ordinary success line")
+    validate.add_argument("--json-summary", action="store_true", help="emit only the seven summary counters as JSON")
     args = parser.parse_args(argv)
+    if args.summary and args.json_summary:
+        parser.error("choose one summary format")
     seen = set()
     errors = 0
     count = 0
@@ -118,7 +121,7 @@ def main(argv=None):
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)
-            if args.summary and not problems:
+            if (args.summary or args.json_summary) and not problems:
                 summary["synthetic" if case["synthetic"] else "real"] += 1
                 summary[case["review_status"]] += 1
                 summary[case["answerability"]] += 1
@@ -128,10 +131,10 @@ def main(argv=None):
     if errors:
         print(f"FAIL: {count} case(s), {errors} error(s).", file=sys.stderr)
         return 1
-    if not args.quiet:
+    if not args.quiet and not args.json_summary:
         print(f"PASS: {count} case(s); format checks only. Factual support and privacy still require review.")
-    if args.summary:
-        print("SUMMARY: " + json.dumps(summary))
+    if args.summary or args.json_summary:
+        print(("" if args.json_summary else "SUMMARY: ") + json.dumps(summary))
     return 0
 
 
