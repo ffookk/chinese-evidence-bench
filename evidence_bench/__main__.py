@@ -71,10 +71,16 @@ def main(argv=None):
     validate.add_argument("--as-of", type=_as_of, default=date.today(), help="date ceiling for reproducible validation (default: local today)")
     validate.add_argument("--require-reviewed", action="store_true", help="reject pending cases")
     validate.add_argument("--real-only", action="store_true", help="reject synthetic cases")
+    validate.add_argument("--summary", action="store_true", help="print fixed-schema aggregate counts only after every input passes")
     args = parser.parse_args(argv)
     seen = set()
     errors = 0
     count = 0
+    summary = {
+        "real": 0, "synthetic": 0,
+        "reviewed": 0, "pending": 0,
+        "supported": 0, "insufficient_evidence": 0, "needs_clarification": 0,
+    }
     for file_index, path in enumerate(args.paths, 1):
         if path.suffix.lower() not in {".json", ".jsonl"}:
             print(f"input {file_index}: expected a .json or .jsonl extension", file=sys.stderr)
@@ -103,6 +109,10 @@ def main(argv=None):
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)
+            if args.summary and not problems:
+                summary["synthetic" if case["synthetic"] else "real"] += 1
+                summary[case["review_status"]] += 1
+                summary[case["answerability"]] += 1
         if records == 0:
             print(f"input {file_index}: no readable case records", file=sys.stderr)
             errors += 1
@@ -110,6 +120,8 @@ def main(argv=None):
         print(f"FAIL: {count} case(s), {errors} error(s).", file=sys.stderr)
         return 1
     print(f"PASS: {count} case(s); format checks only. Factual support and privacy still require review.")
+    if args.summary:
+        print("SUMMARY: " + json.dumps(summary))
     return 0
 
 

@@ -150,6 +150,80 @@ class CliTests(unittest.TestCase):
         self.assertIn("line 1", error)
         self.assertIn("3 case(s)", error)
 
+    def test_default_success_output_is_unchanged(self):
+        content = (ROOT / "examples/synthetic.jsonl").read_text(encoding="utf-8")
+        result, output, error = self.run_input(content)
+        self.assertEqual(result, 0)
+        self.assertEqual(error, "")
+        self.assertEqual(output, "PASS: 3 case(s); format checks only. Factual support and privacy still require review.\n")
+
+    def test_summary_counts_all_mixed_inputs(self):
+        with contextlib.redirect_stdout(io.StringIO()) as stdout, contextlib.redirect_stderr(io.StringIO()) as stderr:
+            result = main([
+                "validate", str(ROOT / "examples/synthetic.jsonl"), str(ROOT / "data/public-facts.jsonl"),
+                "--as-of", "2026-09-20", "--summary",
+            ])
+        self.assertEqual(result, 0)
+        self.assertEqual(stderr.getvalue(), "")
+        lines = stdout.getvalue().splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(lines[0], "PASS: 11 case(s); format checks only. Factual support and privacy still require review.")
+        self.assertTrue(lines[1].startswith("SUMMARY: "))
+        self.assertEqual(json.loads(lines[1].removeprefix("SUMMARY: ")), {
+            "real": 8, "synthetic": 3, "reviewed": 10, "pending": 1,
+            "supported": 9, "insufficient_evidence": 1, "needs_clarification": 1,
+        })
+
+    def test_summary_suppressed_after_invalid_records(self):
+        content = (ROOT / "examples/synthetic.jsonl").read_text(encoding="utf-8")
+        invalid = json.loads(content.splitlines()[0])
+        invalid["id"] = "invalid-status-fixture"
+        invalid["review_status"] = "status-payload-marker"
+        for bad_record in ("broken", "null", json.dumps(invalid)):
+            with self.subTest(bad_record=bad_record):
+                result, output, error = self.run_input(content + "\n" + bad_record, flags=("--summary",))
+                self.assertEqual(result, 1)
+                self.assertEqual(output, "")
+                self.assertIn("FAIL:", error)
+                self.assertNotIn("status-payload-marker", error)
+
+    def test_summary_suppressed_for_duplicates_and_unreadable_files(self):
+        source = ROOT / "examples/synthetic.jsonl"
+        for second in (source, ROOT / "missing-payload-marker.jsonl"):
+            with self.subTest(second=second):
+                with contextlib.redirect_stdout(io.StringIO()) as stdout, contextlib.redirect_stderr(io.StringIO()) as stderr:
+                    result = main(["validate", str(source), str(second), "--as-of", "2026-01-31", "--summary"])
+                self.assertEqual(result, 1)
+                self.assertEqual(stdout.getvalue(), "")
+                self.assertIn("FAIL:", stderr.getvalue())
+                self.assertNotIn(str(second), stderr.getvalue())
+
+    def test_summary_does_not_bypass_strict_gates(self):
+        content = (ROOT / "examples/synthetic.jsonl").read_text(encoding="utf-8")
+        for gate in ("--real-only", "--require-reviewed"):
+            with self.subTest(gate=gate):
+                result, output, error = self.run_input(content, flags=("--summary", gate))
+                self.assertEqual(result, 1)
+                self.assertEqual(output, "")
+                self.assertIn(gate, error)
+
+    def test_summary_contains_only_fixed_counts_and_no_payload(self):
+        case = json.loads((ROOT / "examples/synthetic.jsonl").read_text(encoding="utf-8").splitlines()[0])
+        case.update(id="id-payload-marker", question="Question payload marker", reference_answer="Answer payload marker")
+        case["evidence"][0].update(source_url="https://payload-marker.invalid/rule", source_title="Title payload marker")
+        case["evidence"][0]["evidence_locator"]["value"] = "Locator payload marker"
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "path-payload-marker.json"
+            path.write_text(json.dumps([case]), encoding="utf-8")
+            with contextlib.redirect_stdout(io.StringIO()) as stdout, contextlib.redirect_stderr(io.StringIO()) as stderr:
+                result = main(["validate", str(path), "--as-of", "2026-01-31", "--summary"])
+            output = stdout.getvalue()
+            self.assertEqual(result, 0)
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertEqual(output.splitlines()[1], 'SUMMARY: {"real": 0, "synthetic": 1, "reviewed": 1, "pending": 0, "supported": 1, "insufficient_evidence": 0, "needs_clarification": 0}')
+            for value in (case["id"], case["question"], case["reference_answer"], case["evidence"][0]["source_url"], case["evidence"][0]["source_title"], case["evidence"][0]["evidence_locator"]["value"], str(path), temp):
+                self.assertNotIn(value, output)
+
 
 if __name__ == "__main__":
     unittest.main()
