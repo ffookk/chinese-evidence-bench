@@ -46,6 +46,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `validate --require-answerability STATE` requires the selected schema answerability state throughout the batch.
 - `validate --require-locator-type TYPE` requires at least one source per case and the selected type on every locator.
 - `validate --max-review-age DAYS` requires reviewed dates no older than DAYS relative to `--as-of`; pending cases fail.
+- Repeat `validate --source-host HOST` to allow specific hostnames, compared without case differences. Empty evidence remains allowed by the schema unless another gate requires it.
 
 ## Problem
 

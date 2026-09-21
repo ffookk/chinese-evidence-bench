@@ -5,6 +5,7 @@ from datetime import date
 import json
 from pathlib import Path
 import sys
+from urllib.parse import urlsplit
 
 from . import __version__
 from .validator import ANSWERABILITY, LOCATOR_TYPES, validate_case
@@ -93,6 +94,7 @@ def main(argv=None):
     validate.add_argument("--require-answerability", choices=sorted(ANSWERABILITY), help="require one answerability state throughout")
     validate.add_argument("--require-locator-type", choices=sorted(LOCATOR_TYPES), help="require evidence with this locator type")
     validate.add_argument("--max-review-age", type=_count, help="maximum review age in days relative to --as-of")
+    validate.add_argument("--source-host", action="append", default=[], help="allowed source hostname; repeat to allow more hosts")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -137,6 +139,8 @@ def main(argv=None):
                 problems.append("evidence: missing evidence or a different locator type")
             if args.max_review_age is not None and not problems and (case["verified_at"] is None or (args.as_of - date.fromisoformat(case["verified_at"])).days > args.max_review_age):
                 problems.append("verified_at: absent or older than the allowed review age")
+            if args.source_host and not problems and any(urlsplit(source["source_url"]).hostname not in {host.lower() for host in args.source_host} for source in case["evidence"]):
+                problems.append("evidence: source host is outside the allowed set")
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)
