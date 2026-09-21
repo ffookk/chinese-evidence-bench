@@ -124,12 +124,19 @@ def main(argv=None):
     validate.add_argument("--input-format", choices=("json", "jsonl"), help="override the input format for all inputs")
     validate.add_argument("--reject-blank-lines", action="store_true", help="reject blank physical JSONL lines")
     validate.add_argument("--json-errors", action="store_true", help="emit JSON diagnostic objects on standard error")
+    validate.add_argument("--max-diagnostics", type=_count, help="maximum detailed input diagnostics; all validation still runs")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
     if args.paths.count(Path("-")) > 1:
         parser.error("standard input may be supplied only once")
+    emitted_diagnostics = 0
     def report(message, location=None):
+        nonlocal emitted_diagnostics
+        if location is not None:
+            if args.max_diagnostics is not None and emitted_diagnostics >= args.max_diagnostics:
+                return
+            emitted_diagnostics += 1
         record = {"location": location, "message": message}
         print(json.dumps(record) if args.json_errors else ((location + ": ") if location else "") + message, file=sys.stderr)
 
