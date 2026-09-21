@@ -27,7 +27,7 @@ Replace the placeholder wheel filename with the actual built wheel. Dataset path
 ## Review a run
 
 1. Choose **Create unscored run** or select a JSON file with **Import run or scored JSON**. Creation includes every case as missing/unscored. Import accepts a strict original run or an intact scored artifact; Python verifies all identities and recomputes stored metrics before accepting a scored artifact. Synthetic examples are demonstrations, not measured model results.
-2. Search case IDs/questions or filter by answerability, synthetic/real label, and response outcome. The case list has 20 items per page. Case details show the question, reference answer, source text and recorded review state. Evidence URLs are displayed as text and are never fetched.
+2. Search case IDs/questions or filter by answerability, synthetic/real label, and response outcome. The case list defaults to 20 items per page. Case details show the question, reference answer, source text and recorded review state. Evidence URLs are displayed as text and are never fetched.
 3. Enter the declared outcome and complete supplied response. A null prompt override means the exact original case question; uncheck the default-prompt control to enter a complete alternate prompt. Enter factual, citation and refusal-decision judgments using the same scoring rules as the CLI.
 4. Switching cases preserves the tab's draft edits. Editing the response, prompt or outcome resets judgments to unscored for review; factual/citation axes on refusals and clarification requests remain not applicable. Changing an observed response to missing asks before clearing its text and judgments in the draft.
 5. Live metrics are calculated by Python after a short debounce. Invalid drafts show an error instead of old or misleading rates. A valid preview is marked **not saved** and does not change the saved run. Choose **Save changes to memory** to validate and save all changed records and metadata together.
@@ -88,3 +88,4 @@ These are content limits, not a hard ceiling on process/browser RAM: parsing, co
 ## Small review controls
 
 - **Reset case filters** clears the search and case filters and returns to the first page without changing any draft.
+- **Cases per page** offers 10, 20 or 50 entries. Changing it returns to the first page and preserves drafts.
