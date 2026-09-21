@@ -79,6 +79,7 @@
     for (const id of [...filterIds, "reset-filters", "page-size"]) byId(id).disabled = busy || !hasRun;
     for (const element of byId("case-list").querySelectorAll("button")) element.disabled = busy;
     byId("outcome").disabled = busy || !record;
+    byId("restore-case").disabled = busy || !drafts.has(selectedCase);
     byId("prompt-default").disabled = busy || !record;
     byId("prompt").disabled = busy || !record || record.prompt_override === null;
     byId("response-count").textContent = "Response characters: " + Array.from(record?.response_text || "").length + " (Unicode code points).";
@@ -266,6 +267,7 @@
     const filtered = filteredCases(), index = filtered.findIndex(item => item.id === selectedCase) + direction, item = filtered[index];
     if (!item) return; selectedCase = item.id; page = Math.floor(index / pageSize); renderCases(); renderEditor();
   });
+  byId("restore-case").addEventListener("click", () => { if (!drafts.has(selectedCase) || !window.confirm("Discard only this case's unsaved edits and restore its last loaded saved state?")) return; drafts.delete(selectedCase); changed(); renderEditor(); });
   byId("previous-page").addEventListener("click", () => { page--; renderCases(); });
   byId("next-page").addEventListener("click", () => { page++; renderCases(); });
   byId("create-run").addEventListener("click", () => act(async () => { const result = await api("/api/create", {run_id: byId("new-run-id").value, model_label: byId("new-model").value}); loadView(result); await refreshRuns(); byId("right-run").value = view.key; message("Created a complete unscored run in memory. No model was called."); }));

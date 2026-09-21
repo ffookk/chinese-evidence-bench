@@ -96,3 +96,4 @@ These are content limits, not a hard ceiling on process/browser RAM: parsing, co
 - **Case draft state** shows only unsaved case edits or cases without local edits. Run-metadata edits do not make a case count as edited.
 - **Previous case** and **Next case** follow the current filters and ordering, moving the list page when needed. If the selected case is outside the filters, Next case starts at the first match.
 - The response character count updates while typing and switching cases. It counts Unicode code points, including spaces and line breaks, without modifying the response.
+- **Restore this case** asks before discarding only the selected case's draft. Other case edits and metadata edits remain intact.
