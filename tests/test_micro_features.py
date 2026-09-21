@@ -64,5 +64,9 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--require-locator-type", "paragraph")[0], 0)
         self.assertEqual(self.run_cli("--require-locator-type", "page")[0], 1)
 
+    def test_review_age(self):
+        self.assertEqual(self.run_cli("--max-review-age", "16")[0], 0)
+        self.assertEqual(self.run_cli("--max-review-age", "15")[0], 1)
+
 if __name__ == "__main__":
     unittest.main()

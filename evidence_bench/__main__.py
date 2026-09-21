@@ -92,6 +92,7 @@ def main(argv=None):
     validate.add_argument("--min-sources", type=_count, help="minimum source entries per case")
     validate.add_argument("--require-answerability", choices=sorted(ANSWERABILITY), help="require one answerability state throughout")
     validate.add_argument("--require-locator-type", choices=sorted(LOCATOR_TYPES), help="require evidence with this locator type")
+    validate.add_argument("--max-review-age", type=_count, help="maximum review age in days relative to --as-of")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -134,6 +135,8 @@ def main(argv=None):
                 problems.append("answerability: does not match the required state")
             if args.require_locator_type and not problems and (not case["evidence"] or any(source["evidence_locator"]["type"] != args.require_locator_type for source in case["evidence"])):
                 problems.append("evidence: missing evidence or a different locator type")
+            if args.max_review_age is not None and not problems and (case["verified_at"] is None or (args.as_of - date.fromisoformat(case["verified_at"])).days > args.max_review_age):
+                problems.append("verified_at: absent or older than the allowed review age")
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)
