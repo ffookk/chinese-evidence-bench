@@ -16,6 +16,7 @@ Python 3.10+ is required, with no additional dependencies. Run from the reposito
 python3 -m evidence_bench validate examples/synthetic.jsonl
 python3 -m evidence_bench validate data/public-facts.jsonl --real-only --require-reviewed
 python3 -m evidence_bench validate examples/synthetic.jsonl data/public-facts.jsonl
+python3 -m evidence_bench validate examples/synthetic.jsonl data/public-facts.jsonl --summary
 python3 -m unittest discover -s tests -v
 ```
 
@@ -28,6 +29,8 @@ Use `python3 -m evidence_bench validate --help` to view validation options. Scri
 | `2` | Invalid command-line arguments |
 
 The command accepts `.json` arrays of cases and `.jsonl` files with one case per line. Pass multiple files to check for duplicate IDs across files. `--as-of YYYY-MM-DD` fixes the date cutoff; `--require-reviewed` excludes pending records, and `--real-only` excludes synthetic records. The public-fact file passes the latter two options; the fictional fixtures fail them as expected. `reviewed` means only that the review disclosed in the batch notes was completed; it does not imply human certification.
+
+Add `--summary` to append aggregate counts after the usual PASS line. Its `SUMMARY: ` prefix is followed by a JSON object with seven fixed keys: `real`, `synthetic`, `reviewed`, `pending`, `supported`, `insufficient_evidence`, and `needs_clarification`. Counts cover all supplied files, include zero values, and contain no case IDs, text, source URLs, or paths. Any validation error suppresses the summary; strict flags still apply. Counts describe record labels, not factual accuracy or independent human review.
 
 Passing validation establishes only that the format and state combinations are valid. It does not prove source authenticity, factual correctness, or the absence of personal information. The tool does not access the network, read environment variables, call models, or save inputs or run logs. See the [v1 data format](docs/data-format.md) and [fixture notes](examples/README.md) for the complete rules and limitations.
 
