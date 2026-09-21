@@ -89,3 +89,4 @@ These are content limits, not a hard ceiling on process/browser RAM: parsing, co
 
 - **Reset case filters** clears the search and case filters and returns to the first page without changing any draft.
 - **Cases per page** offers 10, 20 or 50 entries. Changing it returns to the first page and preserves drafts.
+- **Case order** sorts the filtered list by case ID in either direction or by question text; this does not reorder exported records.
