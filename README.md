@@ -63,6 +63,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `unique_source_hosts` counts distinct hostnames across the batch. Different hosts do not necessarily mean independent sources.
 - Statistics distinguish cases with zero, one, or multiple source entries; counts do not establish sufficiency or corroboration.
 - `locator_type_counts` reports source-entry counts for page, paragraph, section, table, and timestamp locators, never locator text.
+- `real_reviewed_cases` and `real_pending_cases` count records labelled real. Neither label proves factual truth or independent human review.
 
 ## Problem
 
