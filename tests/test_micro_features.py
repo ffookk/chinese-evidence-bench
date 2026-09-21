@@ -221,5 +221,14 @@ class MicroFeatureTests(unittest.TestCase):
         counts = self.stats(cases=[first, second])
         self.assertEqual([counts[key] for key in ("reference_answer_count", "answer_characters_min", "answer_characters_max", "answer_characters_total")], [2, 1, 4, 5])
 
+    def test_applicable_date_buckets(self):
+        cases = []
+        for identifier, applicable in (("fresh", "2026-01-10"), ("recent", "2025-12-01"), ("older", "2024-01-01")):
+            case = self.fixture()
+            case.update(id=identifier, valid_as_of=applicable)
+            cases.append(case)
+        counts = self.stats(cases=cases)
+        self.assertEqual([counts[key] for key in ("applicable_dates_within_30_days", "applicable_dates_31_to_365_days", "applicable_dates_over_365_days")], [1, 1, 1])
+
 if __name__ == "__main__":
     unittest.main()
