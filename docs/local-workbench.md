@@ -92,3 +92,4 @@ These are content limits, not a hard ceiling on process/browser RAM: parsing, co
 - **Case order** sorts the filtered list by case ID in either direction or by question text; this does not reorder exported records.
 - **Recorded evidence** narrows the list to cases with or without evidence entries. Presence alone does not establish evidence quality.
 - **Recorded review status** lists the statuses present in the startup dataset. These supplied labels are not independent certification.
+- **Supplied judgments** shows cases with an unscored axis, an incorrect label, or no unscored axes. Not-applicable axes remain distinct from correct labels; filters include tab drafts.
