@@ -89,6 +89,7 @@ def main(argv=None):
     validate.add_argument("--quiet", action="store_true", help="suppress the ordinary success line")
     validate.add_argument("--json-summary", action="store_true", help="emit only the seven summary counters as JSON")
     validate.add_argument("--expect-cases", type=_count, help="require this nonnegative total case count")
+    validate.add_argument("--min-sources", type=_count, help="minimum source entries per case")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -125,6 +126,8 @@ def main(argv=None):
                     problems.append("review_status: --require-reviewed rejects pending cases")
                 if args.real_only and case.get("synthetic") is not False:
                     problems.append("synthetic: --real-only requires false")
+            if args.min_sources is not None and not problems and len(case["evidence"]) < args.min_sources:
+                problems.append("evidence: fewer than the required source entries")
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)

@@ -51,5 +51,9 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(result, 2)
         self.assertNotIn("private-argument-marker", out + err)
 
+    def test_minimum_sources(self):
+        self.assertEqual(self.run_cli("--min-sources", "1")[0], 0)
+        self.assertEqual(self.run_cli("--min-sources", "2")[0], 1)
+
 if __name__ == "__main__":
     unittest.main()
