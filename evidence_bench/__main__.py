@@ -156,10 +156,12 @@ def main(argv=None):
     stats = {
         "files": len(args.paths),
         "cases": 0,
+        "unique_source_hosts": 0,
         "source_references": 0, "unique_source_urls": 0,
         "time_sensitive_cases": 0, "time_independent_cases": 0,
     }
     source_urls = set()
+    source_hosts = set()
     for file_index, path in enumerate(args.paths, 1):
         if args.input_format is None and path != Path("-") and path.suffix.lower() not in {".json", ".jsonl"}:
             report("expected a .json or .jsonl extension", f"input {file_index}")
@@ -213,6 +215,8 @@ def main(argv=None):
             errors += len(problems)
             if args.stats and not problems:
                 stats["cases"] += 1
+                source_hosts.update(urlsplit(source["source_url"]).hostname for source in case["evidence"])
+                stats["unique_source_hosts"] = len(source_hosts)
                 stats["source_references"] += len(case["evidence"])
                 source_urls.update(source["source_url"] for source in case["evidence"])
                 stats["unique_source_urls"] = len(source_urls)
