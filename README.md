@@ -36,6 +36,10 @@ Passing validation establishes only that the format and state combinations are v
 
 See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 
+## Additional CLI options
+
+- `python3 -m evidence_bench --version` reports the package version and supported schema, not a new release tag. Invalid arguments receive a fixed, value-free error message.
+
 ## Problem
 
 Models may produce incorrect facts, invent sources, or cite real pages that do not support their claims. A single accuracy score cannot distinguish these failures. The project plans to retain questions, answers, original evidence, review dates, and evidence locations so that cases can be reviewed and evaluations reproduced.

@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import sys
 
+from . import __version__
 from .validator import validate_case
 
 
@@ -63,8 +64,15 @@ def _as_of(value):
         raise argparse.ArgumentTypeError("expected YYYY-MM-DD") from exc
 
 
+class SafeParser(argparse.ArgumentParser):
+    def error(self, _message):
+        self.print_usage(sys.stderr)
+        self.exit(2, "Invalid command-line arguments; use --help for supported options.\n")
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Offline evidence case format checks; does not verify factual truth or privacy.")
+    parser = SafeParser(prog="evidence-bench", description="Offline evidence case format checks; does not verify factual truth or privacy.")
+    parser.add_argument("--version", action="version", version="evidence-bench package " + __version__ + " (schema v1)")
     subparsers = parser.add_subparsers(dest="command", required=True)
     validate = subparsers.add_parser("validate", help="validate JSON arrays or JSONL case files")
     validate.add_argument("paths", nargs="+", type=Path)
