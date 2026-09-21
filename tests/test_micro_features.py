@@ -90,5 +90,12 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--sorted-ids", cases=[left, right])[0], 0)
         self.assertEqual(self.run_cli("--sorted-ids", cases=[right, left])[0], 1)
 
+    def test_unique_question_wording(self):
+        left, right = self.fixture(), self.fixture()
+        left["id"], right["id"] = "aaa", "bbb"
+        right["question"] = "  " + left["question"].upper() + "  "
+        self.assertEqual(self.run_cli(cases=[left, right])[0], 0)
+        self.assertEqual(self.run_cli("--unique-questions", cases=[left, right])[0], 1)
+
 if __name__ == "__main__":
     unittest.main()
