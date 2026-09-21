@@ -200,5 +200,12 @@ class MicroFeatureTests(unittest.TestCase):
         counts = self.stats(cases=cases)
         self.assertEqual([counts[key] for key in ("reviews_within_30_days", "reviews_31_to_365_days", "reviews_over_365_days")], [1, 1, 1])
 
+    def test_cross_case_source_reuse(self):
+        first, second = self.fixture(), self.fixture()
+        first["evidence"] *= 2
+        self.assertEqual(self.stats(cases=[first])["source_urls_used_by_multiple_cases"], 0)
+        second["id"] = "second-case"
+        self.assertEqual(self.stats(cases=[first, second])["source_urls_used_by_multiple_cases"], 1)
+
 if __name__ == "__main__":
     unittest.main()
