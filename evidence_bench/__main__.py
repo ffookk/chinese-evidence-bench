@@ -98,6 +98,7 @@ def main(argv=None):
     validate.add_argument("--min-source-hosts", type=_count, help="minimum distinct evidence hostnames per case")
     validate.add_argument("--id-prefix", help="require every case identifier to start with this prefix")
     validate.add_argument("--sorted-ids", action="store_true", help="require ascending identifiers across all inputs")
+    validate.add_argument("--unique-questions", action="store_true", help="reject repeated normalized question wording")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -110,6 +111,7 @@ def main(argv=None):
         "supported": 0, "insufficient_evidence": 0, "needs_clarification": 0,
     }
     previous_identifier = None
+    seen_questions = set()
     for file_index, path in enumerate(args.paths, 1):
         if path.suffix.lower() not in {".json", ".jsonl"}:
             print(f"input {file_index}: expected a .json or .jsonl extension", file=sys.stderr)
@@ -153,6 +155,11 @@ def main(argv=None):
                 if previous_identifier is not None and case["id"] < previous_identifier:
                     problems.append("id: identifiers are not in ascending order")
                 previous_identifier = case["id"]
+            if args.unique_questions and not problems:
+                wording = " ".join(case["question"].split()).casefold()
+                if wording in seen_questions:
+                    problems.append("question: repeated normalized wording")
+                seen_questions.add(wording)
             for problem in problems:
                 print(f"{prefix}: {problem}", file=sys.stderr)
             errors += len(problems)

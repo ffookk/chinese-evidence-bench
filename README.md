@@ -50,6 +50,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - `validate --min-source-hosts N` checks distinct hostname count per case, not source independence or factual corroboration.
 - `validate --id-prefix PREFIX` requires an exact case-sensitive identifier prefix without exposing identifiers in reports.
 - `validate --sorted-ids` checks ascending IDs across file boundaries in the supplied argument order; it does not reorder data.
+- `validate --unique-questions` detects repeated wording after collapsing whitespace and applying Unicode case folding. It does not identify semantic duplicates.
 
 ## Problem
 
