@@ -158,5 +158,11 @@ class MicroFeatureTests(unittest.TestCase):
         counts = self.stats()
         self.assertEqual((counts["time_sensitive_cases"], counts["time_independent_cases"]), (1, 0))
 
+    def test_source_reference_counts(self):
+        case = self.fixture()
+        case["evidence"] *= 2
+        counts = self.stats(cases=[case])
+        self.assertEqual((counts["source_references"], counts["unique_source_urls"]), (2, 1))
+
 if __name__ == "__main__":
     unittest.main()
