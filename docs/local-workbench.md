@@ -95,3 +95,4 @@ These are content limits, not a hard ceiling on process/browser RAM: parsing, co
 - **Supplied judgments** shows cases with an unscored axis, an incorrect label, or no unscored axes. Not-applicable axes remain distinct from correct labels; filters include tab drafts.
 - **Case draft state** shows only unsaved case edits or cases without local edits. Run-metadata edits do not make a case count as edited.
 - **Previous case** and **Next case** follow the current filters and ordering, moving the list page when needed. If the selected case is outside the filters, Next case starts at the first match.
+- The response character count updates while typing and switching cases. It counts Unicode code points, including spaces and line breaks, without modifying the response.
