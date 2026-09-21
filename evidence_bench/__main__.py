@@ -156,6 +156,7 @@ def main(argv=None):
     stats = {
         "files": len(args.paths),
         "cases": 0,
+        "reviews_within_30_days": 0, "reviews_31_to_365_days": 0, "reviews_over_365_days": 0,
         "real_reviewed_cases": 0, "real_pending_cases": 0,
         "locator_type_counts": {kind: 0 for kind in sorted(LOCATOR_TYPES)},
         "cases_without_sources": 0, "cases_with_one_source": 0, "cases_with_multiple_sources": 0,
@@ -218,6 +219,10 @@ def main(argv=None):
             errors += len(problems)
             if args.stats and not problems:
                 stats["cases"] += 1
+                if case["verified_at"] is not None:
+                    age = (args.as_of - date.fromisoformat(case["verified_at"])).days
+                    bucket = "reviews_within_30_days" if age <= 30 else "reviews_31_to_365_days" if age <= 365 else "reviews_over_365_days"
+                    stats[bucket] += 1
                 if not case["synthetic"]:
                     stats["real_reviewed_cases" if case["review_status"] == "reviewed" else "real_pending_cases"] += 1
                 for source in case["evidence"]:

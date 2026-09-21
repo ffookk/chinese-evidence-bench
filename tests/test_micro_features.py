@@ -191,5 +191,14 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual((counts["real_reviewed_cases"], counts["real_pending_cases"]), (0, 1))
         self.assertEqual(self.stats()["real_reviewed_cases"], 0)
 
+    def test_review_age_buckets(self):
+        cases = []
+        for identifier, reviewed in (("fresh", "2026-01-15"), ("recent", "2025-12-01"), ("older", "2024-01-01")):
+            case = self.fixture()
+            case.update(id=identifier, verified_at=reviewed, time_sensitive=False, valid_as_of=None)
+            cases.append(case)
+        counts = self.stats(cases=cases)
+        self.assertEqual([counts[key] for key in ("reviews_within_30_days", "reviews_31_to_365_days", "reviews_over_365_days")], [1, 1, 1])
+
 if __name__ == "__main__":
     unittest.main()
