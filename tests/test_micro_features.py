@@ -27,6 +27,11 @@ class MicroFeatureTests(unittest.TestCase):
                     result = exit.code
             return result, out.getvalue(), err.getvalue()
 
+    def stats(self, *options, **kwargs):
+        result, output, error = self.run_cli("--stats", *options, **kwargs)
+        self.assertEqual((result, error), (0, ""))
+        return json.loads(next(line[7:] for line in output.splitlines() if line.startswith("STATS: ")))
+
     def test_version(self):
         with contextlib.redirect_stdout(io.StringIO()) as output, self.assertRaises(SystemExit) as exit:
             main(["--version"])
@@ -142,6 +147,12 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual((result, out), (1, ""))
         self.assertEqual(err, "FAIL: 0 case(s), 3 error(s).\n")
         self.assertEqual(len(self.run_cli("--max-diagnostics", "1", content="broken")[2].splitlines()), 2)
+
+    def test_statistics_basics(self):
+        counts = self.stats()
+        self.assertEqual((counts["files"], counts["cases"]), (1, 1))
+        self.assertEqual(self.run_cli("--stats", "--json-summary")[0], 2)
+        self.assertEqual(self.run_cli("--stats", content="broken")[1], "")
 
 if __name__ == "__main__":
     unittest.main()

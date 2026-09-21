@@ -125,6 +125,7 @@ def main(argv=None):
     validate.add_argument("--reject-blank-lines", action="store_true", help="reject blank physical JSONL lines")
     validate.add_argument("--json-errors", action="store_true", help="emit JSON diagnostic objects on standard error")
     validate.add_argument("--max-diagnostics", type=_count, help="maximum detailed input diagnostics; all validation still runs")
+    validate.add_argument("--stats", action="store_true", help="append aggregate dataset statistics after successful validation")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -140,6 +141,8 @@ def main(argv=None):
         record = {"location": location, "message": message}
         print(json.dumps(record) if args.json_errors else ((location + ": ") if location else "") + message, file=sys.stderr)
 
+    if args.stats and args.json_summary:
+        parser.error("JSON-only summary cannot include statistics")
     seen = set()
     errors = 0
     count = 0
@@ -150,6 +153,10 @@ def main(argv=None):
     }
     previous_identifier = None
     seen_questions = set()
+    stats = {
+        "files": len(args.paths),
+        "cases": 0,
+    }
     for file_index, path in enumerate(args.paths, 1):
         if args.input_format is None and path != Path("-") and path.suffix.lower() not in {".json", ".jsonl"}:
             report("expected a .json or .jsonl extension", f"input {file_index}")
@@ -201,6 +208,8 @@ def main(argv=None):
             for problem in problems:
                 report(problem, prefix)
             errors += len(problems)
+            if args.stats and not problems:
+                stats["cases"] += 1
             if (args.summary or args.json_summary) and not problems:
                 summary["synthetic" if case["synthetic"] else "real"] += 1
                 summary[case["review_status"]] += 1
@@ -218,6 +227,8 @@ def main(argv=None):
         print(f"PASS: {count} case(s); format checks only. Factual support and privacy still require review.")
     if args.summary or args.json_summary:
         print(("" if args.json_summary else "SUMMARY: ") + json.dumps(summary))
+    if args.stats:
+        print("STATS: " + json.dumps(stats))
     return 0
 
 
