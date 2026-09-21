@@ -116,5 +116,11 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli(inputs=("-",), stdin=closed)[0], 1)
         self.assertEqual(self.run_cli(inputs=("bad" + chr(0) + ".jsonl",))[0], 1)
 
+    def test_explicit_input_format(self):
+        text = json.dumps([self.fixture()])
+        self.assertEqual(self.run_cli("--input-format", "json", inputs=("-",), stdin=text)[0], 0)
+        self.assertEqual(self.run_cli("--input-format", "json", content=text)[0], 0)
+        self.assertEqual(self.run_cli("--input-format", "jsonl", content=text)[0], 1)
+
 if __name__ == "__main__":
     unittest.main()

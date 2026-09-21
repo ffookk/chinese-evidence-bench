@@ -29,7 +29,7 @@ def _decode(text):
     return json.loads(text, object_pairs_hook=_strict_object, parse_constant=_reject_constant)
 
 
-def read_cases(path, max_bytes=None):
+def read_cases(path, max_bytes=None, input_format=None):
     """Yield (position, case, error); JSONL errors do not hide later records."""
     try:
         if path == Path("-"):
@@ -51,7 +51,7 @@ def read_cases(path, max_bytes=None):
         else:
             stream = path.open(encoding="utf-8")
         with stream:
-            if path == Path("-") or path.suffix.lower() == ".jsonl":
+            if input_format == "jsonl" or input_format is None and (path == Path("-") or path.suffix.lower() == ".jsonl"):
                 for line_no, line in enumerate(stream, 1):
                     if not line.strip():
                         continue
@@ -119,6 +119,7 @@ def main(argv=None):
     validate.add_argument("--sorted-ids", action="store_true", help="require ascending identifiers across all inputs")
     validate.add_argument("--unique-questions", action="store_true", help="reject repeated normalized question wording")
     validate.add_argument("--max-input-bytes", type=_count, help="maximum bytes read from each input")
+    validate.add_argument("--input-format", choices=("json", "jsonl"), help="override the input format for all inputs")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
@@ -135,12 +136,12 @@ def main(argv=None):
     previous_identifier = None
     seen_questions = set()
     for file_index, path in enumerate(args.paths, 1):
-        if path != Path("-") and path.suffix.lower() not in {".json", ".jsonl"}:
+        if args.input_format is None and path != Path("-") and path.suffix.lower() not in {".json", ".jsonl"}:
             print(f"input {file_index}: expected a .json or .jsonl extension", file=sys.stderr)
             errors += 1
             continue
         records = 0
-        for position, case, error in read_cases(path, args.max_input_bytes):
+        for position, case, error in read_cases(path, args.max_input_bytes, args.input_format):
             prefix = f"input {file_index}, {position}"
             if error:
                 print(f"{prefix}: {error}", file=sys.stderr)
