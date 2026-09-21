@@ -68,5 +68,11 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--max-review-age", "16")[0], 0)
         self.assertEqual(self.run_cli("--max-review-age", "15")[0], 1)
 
+    def test_source_hosts(self):
+        self.assertEqual(self.run_cli("--source-host", "FIXTURE.INVALID")[0], 0)
+        result, out, err = self.run_cli("--source-host", "private-host-marker.invalid")
+        self.assertEqual(result, 1)
+        self.assertNotIn("private-host-marker", out + err)
+
 if __name__ == "__main__":
     unittest.main()
