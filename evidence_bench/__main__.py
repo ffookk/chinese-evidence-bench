@@ -156,6 +156,7 @@ def main(argv=None):
     stats = {
         "files": len(args.paths),
         "cases": 0,
+        "locator_type_counts": {kind: 0 for kind in sorted(LOCATOR_TYPES)},
         "cases_without_sources": 0, "cases_with_one_source": 0, "cases_with_multiple_sources": 0,
         "unique_source_hosts": 0,
         "source_references": 0, "unique_source_urls": 0,
@@ -216,6 +217,8 @@ def main(argv=None):
             errors += len(problems)
             if args.stats and not problems:
                 stats["cases"] += 1
+                for source in case["evidence"]:
+                    stats["locator_type_counts"][source["evidence_locator"]["type"]] += 1
                 stats["cases_without_sources"] += not case["evidence"]
                 stats["cases_with_one_source"] += len(case["evidence"]) == 1
                 stats["cases_with_multiple_sources"] += len(case["evidence"]) > 1

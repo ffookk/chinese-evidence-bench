@@ -179,5 +179,9 @@ class MicroFeatureTests(unittest.TestCase):
         counts = self.stats(cases=[none, one, many])
         self.assertEqual([counts[key] for key in ("cases_without_sources", "cases_with_one_source", "cases_with_multiple_sources")], [1, 1, 1])
 
+    def test_locator_histogram(self):
+        counts = self.stats()["locator_type_counts"]
+        self.assertEqual(counts, {"page": 0, "paragraph": 1, "section": 0, "table": 0, "timestamp": 0})
+
 if __name__ == "__main__":
     unittest.main()
