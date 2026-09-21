@@ -123,11 +123,16 @@ def main(argv=None):
     validate.add_argument("--max-input-bytes", type=_count, help="maximum bytes read from each input")
     validate.add_argument("--input-format", choices=("json", "jsonl"), help="override the input format for all inputs")
     validate.add_argument("--reject-blank-lines", action="store_true", help="reject blank physical JSONL lines")
+    validate.add_argument("--json-errors", action="store_true", help="emit JSON diagnostic objects on standard error")
     args = parser.parse_args(argv)
     if args.summary and args.json_summary:
         parser.error("choose one summary format")
     if args.paths.count(Path("-")) > 1:
         parser.error("standard input may be supplied only once")
+    def report(message, location=None):
+        record = {"location": location, "message": message}
+        print(json.dumps(record) if args.json_errors else ((location + ": ") if location else "") + message, file=sys.stderr)
+
     seen = set()
     errors = 0
     count = 0
@@ -140,14 +145,14 @@ def main(argv=None):
     seen_questions = set()
     for file_index, path in enumerate(args.paths, 1):
         if args.input_format is None and path != Path("-") and path.suffix.lower() not in {".json", ".jsonl"}:
-            print(f"input {file_index}: expected a .json or .jsonl extension", file=sys.stderr)
+            report("expected a .json or .jsonl extension", f"input {file_index}")
             errors += 1
             continue
         records = 0
         for position, case, error in read_cases(path, args.max_input_bytes, args.input_format, args.reject_blank_lines):
             prefix = f"input {file_index}, {position}"
             if error:
-                print(f"{prefix}: {error}", file=sys.stderr)
+                report(error, prefix)
                 errors += 1
                 continue
             records += 1
@@ -187,20 +192,20 @@ def main(argv=None):
                     problems.append("question: repeated normalized wording")
                 seen_questions.add(wording)
             for problem in problems:
-                print(f"{prefix}: {problem}", file=sys.stderr)
+                report(problem, prefix)
             errors += len(problems)
             if (args.summary or args.json_summary) and not problems:
                 summary["synthetic" if case["synthetic"] else "real"] += 1
                 summary[case["review_status"]] += 1
                 summary[case["answerability"]] += 1
         if records == 0:
-            print(f"input {file_index}: no readable case records", file=sys.stderr)
+            report("no readable case records", f"input {file_index}")
             errors += 1
     if args.expect_cases is not None and count != args.expect_cases:
-        print("batch: case count does not match the requested total", file=sys.stderr)
+        report("batch: case count does not match the requested total")
         errors += 1
     if errors:
-        print(f"FAIL: {count} case(s), {errors} error(s).", file=sys.stderr)
+        report(f"FAIL: {count} case(s), {errors} error(s).")
         return 1
     if not args.quiet and not args.json_summary:
         print(f"PASS: {count} case(s); format checks only. Factual support and privacy still require review.")
