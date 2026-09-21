@@ -129,5 +129,13 @@ class MicroFeatureTests(unittest.TestCase):
         self.assertEqual((result, out), (1, ""))
         self.assertIn("line 1", err)
 
+    def test_json_diagnostics(self):
+        result, out, err = self.run_cli("--json-errors", content="private-input-marker")
+        records = [json.loads(line) for line in err.splitlines()]
+        self.assertEqual((result, out), (1, ""))
+        self.assertEqual(records[0]["location"], "input 1, line 1")
+        self.assertEqual(set(records[0]), {"location", "message"})
+        self.assertNotIn("private-input-marker", err)
+
 if __name__ == "__main__":
     unittest.main()

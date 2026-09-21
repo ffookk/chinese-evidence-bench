@@ -55,6 +55,7 @@ See [input and diagnostic notes](docs/usage-notes.md) for more command details.
 - Use one `-` input operand for UTF-8 JSONL on standard input. Repeated `-`, malformed UTF-8, oversized or unavailable stdin, and invalid paths fail without echoing data.
 - `validate --input-format json|jsonl` overrides filename extensions and stdin defaults for all inputs in that invocation.
 - `validate --reject-blank-lines` rejects blank physical JSONL lines while keeping ordinary blank-line handling unchanged by default.
+- `validate --json-errors` writes JSON objects with `location` and `message` to stderr; generated locations contain only input/case/line numbers. Argument errors remain fixed prose.
 
 ## Problem
 
