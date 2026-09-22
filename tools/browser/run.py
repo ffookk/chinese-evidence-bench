@@ -15,6 +15,22 @@ from fixtures import dataset, seed
 SCENARIOS = ("review-controls", "deleted-run", "failed-selection", "reload-failure")
 
 
+def failure_checkpoint(output, browser, scenario):
+    """Accept only fixed failure metadata; never return child diagnostics."""
+    try:
+        value = json.loads(output)
+    except (ValueError, TypeError):
+        return ""
+    if not isinstance(value, dict) or set(value) != {"browser", "scenario", "passed", "checkpoint", "error_kind"}:
+        return ""
+    if value["browser"] != browser or value["scenario"] != scenario or value["passed"] is not False:
+        return ""
+    number, kind = value["checkpoint"], value["error_kind"]
+    if type(number) is not int or not 0 <= number <= 19 or kind not in ("assertion", "timeout", "other"):
+        return ""
+    return f" at checkpoint {number} ({kind})"
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--browser", action="append", choices=("chromium", "firefox"), help="run one engine; default: both required engines")
@@ -39,7 +55,8 @@ def main():
                 thread.start()
                 result = subprocess.run([node, str(Path(__file__).with_name("checks.cjs")), server.origin, browser, scenario], capture_output=True, text=True, timeout=120)
                 if result.returncode:
-                    print(f"FAIL: {browser} / {scenario}. A required browser check did not complete; no checks were skipped.", file=sys.stderr)
+                    location = failure_checkpoint(result.stdout, browser, scenario)
+                    print(f"FAIL: {browser} / {scenario}{location}. A required browser check did not complete; no checks were skipped.", file=sys.stderr)
                     return 1
                 summary = json.loads(result.stdout)
                 if summary != {"browser": browser, "scenario": scenario, "passed": True, "external_requests": 0, "page_errors": 0}:

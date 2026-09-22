@@ -2,8 +2,7 @@
 const assert = require("node:assert/strict");
 const {chromium, firefox} = require("playwright");
 const [origin, engine, scenario] = process.argv.slice(2);
-const engines = {chromium, firefox};
-let checkpoint = "startup";
+let checkpoint = 0; // Browser startup.
 
 async function ready(page, id = "reload-run") {
   await page.waitForFunction(id => !document.getElementById(id).disabled, id);
@@ -35,7 +34,7 @@ async function readDownload(page, id) {
 }
 
 async function reviewControls(context) {
-  checkpoint = "review controls and draft preservation";
+  checkpoint = 1; // Initial state and filter reset.
   const page = await context.newPage();
   const checks = [];
   const el=id=>page.locator('#'+id), text=id=>el(id).textContent();
@@ -51,31 +50,38 @@ async function reviewControls(context) {
   await el('case-search').fill('fictional-060'); await choose('outcome-filter','missing'); assert.equal(await count(),1);
   await el('reset-filters').click(); assert.equal(await count(),20); assert.equal(await el('response').inputValue(),'Fictional pending note.'); assert.match(await text('save-state'),/Unsaved/);
   checks.push('reset clears all active filters and preserves the case draft');
+  checkpoint = 2; // Page sizes.
   await choose('page-size','10'); assert.equal(await count(),10); assert.equal(await text('page-number'),'1 / 7');
   await el('next-page').click(); assert.equal(await text('page-number'),'2 / 7');
   await choose('page-size','50'); assert.equal(await count(),50); assert.equal(await text('page-number'),'1 / 2');
   await choose('page-size','20'); assert.equal(await count(),20); assert.equal(await el('response').inputValue(),'Fictional pending note.');
   checks.push('10/20/50 page sizes and page reset preserve drafts');
+  checkpoint = 3; // Case ordering.
   await choose('case-sort','descending'); assert.equal(await first(),'fictional-063');
   await choose('case-sort','question'); assert.equal(await first(),'fictional-055');
   await el('reset-filters').click(); assert.match(await first(),/^fictional-001/);
   checks.push('distinct descending ID and question sorts reset to ascending ID');
+  checkpoint = 4; // Evidence filter.
   await choose('evidence-filter','present'); assert.match(await text('case-count'),/^42 of 63/);
   await choose('evidence-filter','absent'); assert.match(await text('case-count'),/^21 of 63/);
   const absentIDs=await page.locator('#case-list button strong').allTextContents(); assert(absentIDs.every(id=>Number(id.match(/\d+/)[0])%3===0));
   await el('reset-filters').click(); checks.push('evidence presence and absence filters match recorded entries');
+  checkpoint = 5; // Review status filter.
   await choose('review-filter','pending'); assert.match(await text('case-count'),/^21 of 63/);
   await choose('review-filter','reviewed'); assert.match(await text('case-count'),/^42 of 63/);
   await el('reset-filters').click(); checks.push('dataset-derived review status options filter exact supplied labels');
+  checkpoint = 6; // Judgment filter.
   await choose('judgment-filter','incorrect'); assert.equal(await count(),1); assert.equal(await first(),'fictional-002');
   await page.locator('#case-list button').first().click(); await choose('judge-refusal','correct');
   assert.equal(await count(),1); await choose('judgment-filter','complete'); assert.equal(await count(),1); // Case 1 was reset to unscored by text edit.
   await choose('judgment-filter','unscored'); assert.match(await text('case-count'),/^62 of 63/);
   await el('reset-filters').click(); checks.push('judgment filters reflect current unsaved labels including unscored state');
+  checkpoint = 7; // Draft filter.
   await page.locator('.metadata summary').click(); await el('meta-model').fill('Fictional changed declaration');
   await choose('draft-filter','changed'); assert.equal(await count(),2);
   await choose('draft-filter','unchanged'); assert.match(await text('case-count'),/^61 of 63/);
   await el('reset-filters').click(); checks.push('draft filter counts case edits independently of metadata edits');
+  checkpoint = 8; // Matching case navigation.
   await choose('page-size','10'); await page.locator('#case-list button').nth(9).click();
   assert.equal(await text('case-id'),'fictional-010'); await el('next-case').click();
   assert.equal(await text('case-id'),'fictional-011'); assert.equal(await text('page-number'),'2 / 7'); assert.equal(await text('case-position'),'Match 11 of 63');
@@ -84,17 +90,20 @@ async function reviewControls(context) {
   await el('next-case').click(); assert.equal(await text('case-id'),'fictional-030'); assert.equal(await el('next-case').isDisabled(),true);
   await el('case-search').fill('no-fictional-case'); assert.equal(await el('previous-case').isDisabled(),true); assert.equal(await el('next-case').isDisabled(),true);
   await el('reset-filters').click(); checks.push('matching-case navigation crosses pages, handles filtered-out selection and empty results');
+  checkpoint = 9; // Unicode response count.
   await page.locator('#case-list button').first().click(); await el('response').fill('A' + String.fromCodePoint(0x1F642) + '\n');
   assert.equal(await text('response-count'),'Response characters: 3 (Unicode code points).'); assert.equal(await el('response').inputValue(),'A' + String.fromCodePoint(0x1F642) + '\n');
   await el('next-case').click(); assert.equal(await text('response-count'),'Response characters: 23 (Unicode code points).');
   await el('previous-case').click(); assert.equal(await text('response-count'),'Response characters: 3 (Unicode code points).');
   checks.push('live response counter counts Unicode code points and updates across cases');
+  checkpoint = 10; // Selected case restoration.
   page.once('dialog',d=>d.dismiss()); await el('restore-case').click(); assert.equal(await el('response').inputValue(),'A' + String.fromCodePoint(0x1F642) + '\n');
   page.once('dialog',d=>d.accept()); await el('restore-case').click(); assert.equal(await el('response').inputValue(),'Fictional first answer.');
   assert.equal(await el('meta-model').inputValue(),'Fictional changed declaration');
   await choose('draft-filter','changed'); assert.equal(await count(),1); assert.match(await first(),/^fictional-002/);
   assert.equal(await el('restore-case').isDisabled(),true); assert.match(await text('save-state'),/Unsaved/);
   await el('reset-filters').click(); checks.push('selected-case restore supports cancellation and preserves other case and metadata drafts');
+  checkpoint = 11; // Save and comparison controls.
   assert.equal(await el('swap-runs').isDisabled(),true); await el('save-run').click(); await enabled('swap-runs');
   const left=await el('left-run').inputValue(),right=await el('right-run').inputValue(); assert.notEqual(left,right);
   await el('compare-runs').click(); await enabled('swap-runs'); assert.equal(await el('comparison-panel').isVisible(),true);
@@ -104,7 +113,7 @@ async function reviewControls(context) {
   assert.equal(await el('comparison-panel').isVisible(),true); assert.notEqual(await text('comparison-label'),before);
   checks.push('swap reverses comparison selectors, clears stale report and recalculates explicitly');
   assert.equal(checks.length, 11);
-  checkpoint = "authoritative scored export and import";
+  checkpoint = 12; // Authoritative scored export and import.
   const scored = await readDownload(page, "export-score");
   const textValue = scored.toString("utf8");
   assert.match(textValue, /"large_integer": 9007199254740993/);
@@ -119,14 +128,14 @@ async function reviewControls(context) {
   await ready(page);
   assert.match(await page.locator("#run-count").textContent(), /^3 \/ 8/);
   assert.equal(await page.locator("#meta-model").inputValue(), "Fictional changed declaration");
-  checkpoint = "responsive layout and browser storage";
+  checkpoint = 13; // Responsive layout and browser storage.
   await page.setViewportSize({width:390, height:844});
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.deepEqual(await page.evaluate(() => ({local:localStorage.length, session:sessionStorage.length, cookies:document.cookie})), {local:0, session:0, cookies:""});
 }
 
 async function deletedRun(context) {
-  checkpoint = "reload after another tab removes the selected run";
+  checkpoint = 14; // Reload after another tab removes the selected run.
   const first = await openPage(context), second = await openPage(context);
   await remove(second);
   await second.waitForFunction(() => document.getElementById("run-title").textContent === "fictional-b");
@@ -138,7 +147,7 @@ async function deletedRun(context) {
   assert.equal(await first.locator("#run-workspace").isVisible(), true);
   const exported = JSON.parse((await readDownload(first, "export-run")).toString("utf8"));
   assert.equal(exported.run_id, "fictional-b");
-  checkpoint = "recovery after the final run is removed";
+  checkpoint = 15; // Recovery after the final run is removed.
   await remove(second);
   await second.waitForFunction(() => document.getElementById("run-workspace").hidden);
   await ready(first);
@@ -148,7 +157,7 @@ async function deletedRun(context) {
 }
 
 async function failedSelection(context) {
-  checkpoint = "failed selection keeps the displayed run identity";
+  checkpoint = 16; // Failed selection keeps the displayed run identity.
   const first = await openPage(context), second = await openPage(context);
   await second.locator("#run-select").selectOption("run-2");
   await second.waitForFunction(() => document.getElementById("run-title").textContent === "fictional-b");
@@ -165,7 +174,7 @@ async function failedSelection(context) {
 }
 
 async function reloadFailure(context) {
-  checkpoint = "interrupted reload preserves the unsaved draft";
+  checkpoint = 17; // Interrupted reload preserves the unsaved draft.
   const first = await openPage(context), second = await openPage(context);
   await first.locator("details.metadata > summary").click();
   await first.locator("#meta-model").fill("Fictional unsaved model");
@@ -182,7 +191,7 @@ async function reloadFailure(context) {
   assert.equal(await first.locator("#meta-model").inputValue(), "Fictional unsaved model");
   assert.equal(await first.locator("#save-run").isDisabled(), false);
   assert.equal(await first.locator("#export-run").isDisabled(), true);
-  checkpoint = "retry after interrupted reload";
+  checkpoint = 18; // Retry after interrupted reload.
   await first.unroute("**/api/select");
   first.once("dialog", dialog => dialog.accept());
   await first.locator("#reload-run").click();
@@ -194,12 +203,12 @@ async function reloadFailure(context) {
 
 async function main() {
   assert.match(origin, /^http:\/\/127\.0\.0\.1:[0-9]+$/);
-  const cases = {"review-controls":reviewControls, "deleted-run":deletedRun, "failed-selection":failedSelection, "reload-failure":reloadFailure};
-  assert(engines[engine] && cases[scenario]);
+  assert(engine === "chromium" || engine === "firefox");
+  assert(["review-controls", "deleted-run", "failed-selection", "reload-failure"].includes(scenario));
   let browser, context;
   const errors = [], external = [];
   try {
-    browser = await engines[engine].launch({headless:true});
+    browser = engine === "chromium" ? await chromium.launch({headless:true}) : await firefox.launch({headless:true});
     context = await browser.newContext({viewport:{width:1440, height:1050}, acceptDownloads:true, serviceWorkers:"block"});
     context.setDefaultTimeout(10000);
     context.on("page", page => page.on("pageerror", () => errors.push(true)));
@@ -208,7 +217,11 @@ async function main() {
       return route.continue();
     });
     await context.routeWebSocket("**/*", socket => { external.push(true); socket.close(); });
-    await cases[scenario](context);
+    if (scenario === "review-controls") await reviewControls(context);
+    else if (scenario === "deleted-run") await deletedRun(context);
+    else if (scenario === "failed-selection") await failedSelection(context);
+    else await reloadFailure(context);
+    checkpoint = 19; // External requests and page errors.
     assert.equal(external.length, 0);
     assert.equal(errors.length, 0);
     console.log(JSON.stringify({browser:engine, scenario, passed:true, external_requests:0, page_errors:0}));
@@ -217,7 +230,8 @@ async function main() {
     if (browser) await browser.close();
   }
 }
-main().catch(() => {
-  console.error("Browser check failed at: " + checkpoint + ". No supplied values were logged.");
+main().catch(error => {
+  const errorKind = error?.name === "AssertionError" ? "assertion" : error?.name === "TimeoutError" ? "timeout" : "other";
+  console.log(JSON.stringify({browser:engine, scenario, passed:false, checkpoint, error_kind:errorKind}));
   process.exitCode = 1;
 });
