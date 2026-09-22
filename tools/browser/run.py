@@ -21,14 +21,18 @@ def failure_checkpoint(output, browser, scenario):
         value = json.loads(output)
     except (ValueError, TypeError):
         return ""
-    if not isinstance(value, dict) or set(value) != {"browser", "scenario", "passed", "checkpoint", "error_kind"}:
+    if not isinstance(value, dict) or set(value) != {"browser", "scenario", "passed", "checkpoint", "error_kind", "reason"}:
         return ""
     if value["browser"] != browser or value["scenario"] != scenario or value["passed"] is not False:
         return ""
     number, kind = value["checkpoint"], value["error_kind"]
-    if type(number) is not int or not 0 <= number <= 19 or kind not in ("assertion", "timeout", "other"):
+    if type(number) is not int or not 0 <= number <= 99 or kind not in ("assertion", "timeout", "other"):
         return ""
-    return f" at checkpoint {number} ({kind})"
+    reason = value["reason"]
+    if reason not in ("none", "unknown", "not-stable", "not-visible", "intercepted", "detached", "disabled", "not-editable", "outside-viewport"):
+        return ""
+    detail = kind if reason == "none" else f"{kind}; {reason}"
+    return f" at checkpoint {number} ({detail})"
 
 
 def main():

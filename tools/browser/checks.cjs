@@ -4,6 +4,21 @@ const {chromium, firefox} = require("playwright");
 const [origin, engine, scenario] = process.argv.slice(2);
 let checkpoint = 0; // Browser startup.
 
+function failureReason(error) {
+  if (error?.name !== "TimeoutError") return "none";
+  const message = String(error.message).toLowerCase();
+  const patterns = [["element is not stable", "not-stable"], ["element is not visible", "not-visible"],
+    ["intercepts pointer events", "intercepted"], ["element is not attached", "detached"],
+    ["element was detached", "detached"], ["element is not enabled", "disabled"],
+    ["element is not editable", "not-editable"], ["element is outside of the viewport", "outside-viewport"]];
+  let reason = "unknown", last = -1;
+  for (const [pattern, code] of patterns) {
+    const index = message.lastIndexOf(pattern);
+    if (index > last) { last = index; reason = code; }
+  }
+  return reason;
+}
+
 async function ready(page, id = "reload-run") {
   await page.waitForFunction(id => !document.getElementById(id).disabled, id);
 }
@@ -90,11 +105,24 @@ async function reviewControls(context) {
   await el('next-case').click(); assert.equal(await text('case-id'),'fictional-030'); assert.equal(await el('next-case').isDisabled(),true);
   await el('case-search').fill('no-fictional-case'); assert.equal(await el('previous-case').isDisabled(),true); assert.equal(await el('next-case').isDisabled(),true);
   await el('reset-filters').click(); checks.push('matching-case navigation crosses pages, handles filtered-out selection and empty results');
-  checkpoint = 9; // Unicode response count.
-  await page.locator('#case-list button').first().click(); await el('response').fill('A' + String.fromCodePoint(0x1F642) + '\n');
+  checkpoint = 90; // Select the first case for the Unicode check.
+  await page.locator('#case-list button').first().click();
+  checkpoint = 91; // Verify the intended first case was selected.
+  assert.equal(await text('case-id'), 'fictional-001');
+  checkpoint = 92; // Fill the Unicode response.
+  await el('response').fill('A' + String.fromCodePoint(0x1F642) + '\n');
+  checkpoint = 93; // Verify the filled response and Unicode count.
   assert.equal(await text('response-count'),'Response characters: 3 (Unicode code points).'); assert.equal(await el('response').inputValue(),'A' + String.fromCodePoint(0x1F642) + '\n');
-  await el('next-case').click(); assert.equal(await text('response-count'),'Response characters: 23 (Unicode code points).');
-  await el('previous-case').click(); assert.equal(await text('response-count'),'Response characters: 3 (Unicode code points).');
+  checkpoint = 94; // Navigate to the next case.
+  await el('next-case').click();
+  checkpoint = 95; // Verify the next case response count.
+  assert.equal(await text('case-id'), 'fictional-002');
+  assert.equal(await text('response-count'),'Response characters: 23 (Unicode code points).');
+  checkpoint = 96; // Navigate to the previous case.
+  await el('previous-case').click();
+  checkpoint = 97; // Verify the restored selected-case response count.
+  assert.equal(await text('case-id'), 'fictional-001');
+  assert.equal(await text('response-count'),'Response characters: 3 (Unicode code points).');
   checks.push('live response counter counts Unicode code points and updates across cases');
   checkpoint = 10; // Selected case restoration.
   page.once('dialog',d=>d.dismiss()); await el('restore-case').click(); assert.equal(await el('response').inputValue(),'A' + String.fromCodePoint(0x1F642) + '\n');
@@ -232,6 +260,6 @@ async function main() {
 }
 main().catch(error => {
   const errorKind = error?.name === "AssertionError" ? "assertion" : error?.name === "TimeoutError" ? "timeout" : "other";
-  console.log(JSON.stringify({browser:engine, scenario, passed:false, checkpoint, error_kind:errorKind}));
+  console.log(JSON.stringify({browser:engine, scenario, passed:false, checkpoint, error_kind:errorKind, reason:failureReason(error)}));
   process.exitCode = 1;
 });

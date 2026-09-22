@@ -17,17 +17,18 @@ finally:
 
 class BrowserDiagnosticsTests(unittest.TestCase):
     def payload(self, **changes):
-        value = {"browser": "firefox", "scenario": "review-controls", "passed": False, "checkpoint": 13, "error_kind": "assertion"}
+        value = {"browser": "firefox", "scenario": "review-controls", "passed": False, "checkpoint": 13, "error_kind": "assertion", "reason": "none"}
         value.update(changes)
         return json.dumps(value)
 
     def test_only_fixed_checkpoint_and_error_kinds_are_reported(self):
-        for number, kind in ((0, "other"), (13, "assertion"), (19, "timeout")):
+        for number, kind, reason in ((0, "other", "none"), (13, "assertion", "none"), (99, "timeout", "disabled")):
             with self.subTest(number=number, kind=kind):
-                self.assertEqual(runner.failure_checkpoint(self.payload(checkpoint=number, error_kind=kind), "firefox", "review-controls"), f" at checkpoint {number} ({kind})")
+                detail = kind if reason == "none" else f"{kind}; {reason}"
+                self.assertEqual(runner.failure_checkpoint(self.payload(checkpoint=number, error_kind=kind, reason=reason), "firefox", "review-controls"), f" at checkpoint {number} ({detail})")
 
     def test_supplied_diagnostics_and_invalid_types_are_not_reported(self):
-        for changes in ({"details": "Fictional supplied detail"}, {"checkpoint": "Fictional supplied detail"}, {"checkpoint": True}, {"checkpoint": -1}, {"checkpoint": 20}, {"error_kind": "Fictional supplied detail"}, {"passed": 0}):
+        for changes in ({"details": "Fictional supplied detail"}, {"checkpoint": "Fictional supplied detail"}, {"checkpoint": True}, {"checkpoint": -1}, {"checkpoint": 100}, {"error_kind": "Fictional supplied detail"}, {"passed": 0}, {"reason": "Fictional supplied detail"}):
             with self.subTest(fields=sorted(changes)):
                 self.assertEqual(runner.failure_checkpoint(self.payload(**changes), "firefox", "review-controls"), "")
 

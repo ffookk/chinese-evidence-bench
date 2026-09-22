@@ -25,7 +25,7 @@ Each engine checks:
 - Failed run selection restoring the displayed identity, and an interrupted Reload preserving unsaved metadata before a successful retry.
 - Mobile viewport overflow, empty browser storage, and absence of external page requests or JavaScript page errors.
 
-Downloads use the browser's temporary test context and are removed when it closes. No screenshots, traces, videos or downloadable test artifacts are produced for CI upload. Diagnostics use fixed scenario names, numeric checkpoints and a fixed error kind rather than supplied values or local paths. Checkpoint comments in `checks.cjs` identify the failed stage; raw browser exceptions and child stderr are not printed. A failed scenario is a test failure; it is not evidence of a real-data leak. These bounded checks do not establish source truth, independent human review, Windows support, or coverage of every browser or privacy risk.
+Downloads use the browser's temporary test context and are removed when it closes. No screenshots, traces, videos or downloadable test artifacts are produced for CI upload. Diagnostics use fixed scenario names, numeric checkpoints and fixed error/reason codes rather than supplied values or local paths. Checkpoint comments in `checks.cjs` identify the failed stage; raw browser exceptions and child stderr are not printed. Timeout reasons classify only fixed Playwright actionability phrases; they do not reproduce the element description or supplied text. A failed scenario is a test failure; it is not evidence of a real-data leak. These bounded checks do not establish source truth, independent human review, Windows support, or coverage of every browser or privacy risk.
 
 ## Continuous integration
 
