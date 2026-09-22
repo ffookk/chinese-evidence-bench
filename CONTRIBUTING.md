@@ -25,7 +25,7 @@ Use English for public documentation, fixtures, comments, issues, discussions, P
 
 ## Automated checks
 
-Before submitting, read the [privacy notes](docs/privacy.md), run the validation commands in the README, and run `python3 scripts/privacy_check.py --history`. The PR Checks workflow runs the privacy check, unit tests, synthetic and public-case validation, and the real, reviewed-case gate.
+Before submitting, read the [privacy notes](docs/privacy.md), run the validation commands in the README, and run `python3 scripts/privacy_check.py --history`. The PR Checks workflow runs the privacy check, unit tests, synthetic and public-case validation, and the real, reviewed-case gate. It also runs the portable [browser regression suite](tools/browser/README.md). The required `validate` check aggregates all unit and browser jobs and rejects failed, cancelled or skipped prerequisites.
 
 `main` requires a pull request and a passing `validate` check, including for administrators. Commit on a working branch; force pushes and deletion of the main branch are prohibited. Automated checks do not replace review of facts, privacy, or practical results.
 

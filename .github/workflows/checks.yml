@@ -10,9 +10,57 @@ permissions:
   contents: read
 
 jobs:
-  validate:
+  tests:
+    name: Unit tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, python: '3.10'}
+          - {os: ubuntu-latest, python: '3.11'}
+          - {os: ubuntu-latest, python: '3.12'}
+          - {os: ubuntu-latest, python: '3.13'}
+          - {os: ubuntu-latest, python: '3.14'}
+          - {os: macos-latest, python: '3.14'}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - name: Privacy guard
+        run: python scripts/privacy_check.py --history
+      - name: English contribution policy
+        run: python scripts/check_english.py
+      - name: Unit tests without skips
+        run: |
+          python - <<'PY'
+          import sys
+          import unittest
+          suite = unittest.defaultTestLoader.discover('tests')
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          sys.exit(not result.wasSuccessful() or bool(result.skipped))
+          PY
+      - name: Validate documented examples
+        run: python -m evidence_bench validate examples/synthetic.jsonl data/public-facts.jsonl
+      - name: Require reviewed real cases
+        run: python -m evidence_bench validate data/public-facts.jsonl --real-only --require-reviewed
+
+  browser:
+    name: Browser regression (${{ matrix.browser }})
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -21,13 +69,33 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.11'
-      - name: Privacy guard
-        run: python scripts/privacy_check.py --history
-      - name: English contribution policy
-        run: python scripts/check_english.py
-      - name: Unit tests
-        run: python -m unittest discover -s tests -v
-      - name: Validate documented examples
-        run: python -m evidence_bench validate examples/synthetic.jsonl data/public-facts.jsonl
-      - name: Require reviewed real cases
-        run: python -m evidence_bench validate data/public-facts.jsonl --real-only --require-reviewed
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - name: Install pinned browser test tools
+        working-directory: tools/browser
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install test browser
+        working-directory: tools/browser
+        run: npx --no-install playwright install --with-deps ${{ matrix.browser }}
+      - name: Run fictional browser regressions
+        run: python tools/browser/run.py --browser ${{ matrix.browser }}
+
+  validate:
+    name: validate
+    if: ${{ always() }}
+    needs: [tests, browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every matrix job to succeed
+        env:
+          TESTS_RESULT: ${{ needs.tests.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+        run: |
+          if [ "$TESTS_RESULT" = success ] && [ "$BROWSER_RESULT" = success ]; then
+            echo "All required unit and browser checks passed."
+          else
+            echo "A required check failed, was cancelled, or was skipped."
+            exit 1
+          fi

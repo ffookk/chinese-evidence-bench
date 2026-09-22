@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1-alpha.1 (release preparation)
+
+- Include eleven review controls added since the previous tag: filter reset, page size, case order, evidence/review/judgment/draft filters, matching-case navigation, Unicode response counts, selected-case restore, and comparison swapping.
+- Repair JSONL Unicode and physical-line handling, URL controls, lone surrogates, legacy numeric and bracketed source addresses, and cross-tab deleted-run or failed-selection recovery. Preserve unsaved drafts when a reload operation fails.
+- Repair shared privacy and English inspection gaps in encoded or duplicate JSON members, JSONL separators, linked parent paths, nonregular files, and historical JSON content.
+- Keep strict server origin checks while using a same-origin fetch referrer policy, allowing Firefox to send its actual local origin instead of a null origin on POST requests. No cross-origin requests are enabled.
+- Add portable Chromium and Firefox regressions using fictional local sessions and pinned development dependencies. Expand CI to Ubuntu Python 3.10–3.14 and macOS Python 3.14 with Node.js 24; the required `validate` check succeeds only when all unit and browser jobs succeed.
+
+This section describes implemented changes prepared for a prerelease. It does not assert that a GitHub Release has already been published. Existing evaluation and privacy limitations remain unchanged.
+
 ## 0.3.0-alpha.1
 
 - Add a complete local browser workbench backed by the existing Python run validator, scorer and comparison engine: create/import runs, search/filter cases, inspect reference evidence, edit prompts/responses/judgments, preview metrics, explicitly save revisions in memory, and export authoritative artifacts.
