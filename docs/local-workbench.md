@@ -22,7 +22,7 @@ python3 -m pip install --no-deps path/to/chinese_evidence_bench.whl
 evidence-bench workbench --dataset examples/synthetic.jsonl --as-of 2026-01-31
 ```
 
-Replace the placeholder wheel filename with the actual built wheel. Dataset paths always refer to explicit local inputs; repository fixtures are not installed as hidden default data. Building the package requires setuptools; running it needs only the Python standard library. The distribution version follows normalized Python packaging notation, while the CLI reports the project's `0.3.0-alpha.1` version label.
+Replace the placeholder wheel filename with the actual built wheel. Dataset paths always refer to explicit local inputs; repository fixtures are not installed as hidden default data. Building the package requires setuptools; running it needs only the Python standard library. The distribution version follows normalized Python packaging notation, while the CLI reports the project's `0.3.1-alpha.1` version label.
 
 ## Review a run
 
@@ -63,7 +63,7 @@ A draft exists only in its browser tab until an explicit save. A browser unload 
 
 ## Network, storage and privacy boundaries
 
-The server binds only `127.0.0.1` on an ephemeral port. It never makes outbound network requests. The browser talks only to that same local origin; there are no model APIs, remote assets, source fetches, cookies, telemetry, service workers or browser storage. HTTP request logging is suppressed. Ordinary terminal output contains the loopback address and fixed status, never responses, file paths, dataset contents or the session capability.
+The server binds only `127.0.0.1` on an ephemeral port. API fetches use a same-origin referrer policy so Firefox retains the local request origin; the page response still sets `Referrer-Policy: no-referrer`. Requests remain constrained to the same local origin, and the server continues rejecting absent, null or foreign API origins. It never makes outbound network requests. The browser talks only to that same local origin; there are no model APIs, remote assets, source fetches, cookies, telemetry, service workers or browser storage. HTTP request logging is suppressed. Ordinary terminal output contains the loopback address and fixed status, never responses, file paths, dataset contents or the session capability.
 
 The page receives a cryptographically random session capability, removes it from the DOM and retains it in page memory. The capability never enters a URL, fragment, cookie, localStorage or ordinary logs. Every JSON operation uses POST, exact numeric Host/Origin checks and that capability. Foreign or duplicate boundary headers, DNS aliases, cross-site fetch metadata, wildcard CORS, transfer encoding, unsupported methods, invalid content types and invalid lengths are rejected. Responses are not cached; CSP uses fixed script/style content hashes and rejects framing, external resources, forms and dynamic scripts. Imported text and evidence are rendered through text nodes, not HTML insertion.
 

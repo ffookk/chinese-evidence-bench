@@ -34,7 +34,7 @@ Add `--summary` to append aggregate counts after the usual PASS line. Its `SUMMA
 
 Passing validation establishes only that the format and state combinations are valid. It does not prove source authenticity, factual correctness, or the absence of personal information. Validation does not save inputs or run logs. No command fetches remote sources, reads environment secrets, or calls models; the workbench serves only a loopback browser session, and the explicit evaluation commands save private local artifacts. See the [v1 data format](docs/data-format.md) and [fixture notes](examples/README.md) for the complete rules and limitations.
 
-See [input and diagnostic notes](docs/usage-notes.md) for more command details.
+See [input and diagnostic notes](docs/usage-notes.md) for more command details. For development checks, see the [portable browser regression guide](tools/browser/README.md) for pinned test dependencies, the Chromium/Firefox scenarios and the supported CI matrix.
 
 ## Offline evaluation
 

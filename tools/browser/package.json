@@ -1,0 +1,15 @@
+{
+  "name": "evidence-bench-browser-checks",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Development-only fictional workbench browser regression checks",
+  "scripts": {
+    "test": "python3 run.py"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

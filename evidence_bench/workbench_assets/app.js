@@ -29,7 +29,7 @@
   async function api(route, payload, download = false) {
     let response;
     try {
-      response = await fetch(route, {method: "POST", mode: "same-origin", credentials: "omit", cache: "no-store", redirect: "error", referrerPolicy: "no-referrer",
+      response = await fetch(route, {method: "POST", mode: "same-origin", credentials: "omit", cache: "no-store", redirect: "error", referrerPolicy: "same-origin",
         headers: {"Content-Type": "application/json", "X-Workbench-Capability": capability}, body: JSON.stringify(payload)});
     } catch (_) { throw new Error("The local session is unavailable. Check that its terminal server is still running."); }
     if (!response.ok) {

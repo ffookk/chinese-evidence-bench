@@ -17,3 +17,6 @@ local-data/
 build/
 dist/
 *.egg-info/
+
+# Development-only browser dependencies
+tools/browser/node_modules/
