@@ -100,3 +100,7 @@ These are content limits, not a hard ceiling on process/browser RAM: parsing, co
 - The response character count updates while typing and switching cases. It counts Unicode code points, including spaces and line breaks, without modifying the response.
 - **Restore this case** asks before discarding only the selected case's draft. Other case edits and metadata edits remain intact.
 - **Swap baseline and candidate** exchanges the comparison selectors and clears any displayed comparison. Run comparison again explicitly to calculate the reversed direction.
+
+### Pending preview layout
+
+While authoritative draft validation is pending, the metrics region reserves its previous height so controls below it remain in place during pointer activation. This prevents a delayed preview from moving Reset case filters between mouse press and release. The reservation is a minimum, so content can expand, and is cleared when validated metrics are rendered. Errors remain visible, later edits can recover, and a new viewport can use its natural layout. This layout repair does not establish that every historical browser timeout has the same cause.

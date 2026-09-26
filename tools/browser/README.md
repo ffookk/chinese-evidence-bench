@@ -22,6 +22,7 @@ The package lock pins Playwright 1.63.0 and its development dependency. The fixt
 Each engine checks:
 
 - Eleven review controls, including filtering, paging, ordering, case navigation, Unicode response counts, selective draft restoration and comparison swapping.
+- A delayed authoritative preview arriving between pointer press and release on Reset filters, plus validation errors, recovery, repeated edits and mobile reflow.
 - Editing and explicitly saving a draft, then downloading and reimporting a scored artifact through the authoritative Python validator. Raw large-integer and float metadata are retained in downloaded bytes.
 - Reload after another tab removes the selected run, correct remaining-run export, and the empty state after final removal.
 - Failed run selection restoring the displayed identity, and an interrupted Reload preserving unsaved metadata before a successful retry.

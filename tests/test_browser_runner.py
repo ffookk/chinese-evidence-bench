@@ -98,16 +98,16 @@ class BrowserRepetitionTests(unittest.TestCase):
         self.assertEqual(children, [("firefox", scenario) for _ in range(2) for scenario in runner.SCENARIOS])
         self.assertIn("(iteration 1/2)", output)
         self.assertIn("(iteration 2/2)", output)
-        self.assertIn("PASS: 8 browser scenarios", output)
+        self.assertIn("PASS: 10 browser scenarios", output)
         self.assertEqual(errors, "")
 
     def test_first_failure_stops_repetitions_and_preserves_fixed_diagnostics(self):
-        code, children, output, errors = self.exercise(["--browser", "firefox", "--repeat", "3"], fail_at=5)
+        code, children, output, errors = self.exercise(["--browser", "firefox", "--repeat", "3"], fail_at=6)
         self.assertEqual(code, 1)
-        self.assertEqual(len(children), 5)
+        self.assertEqual(len(children), 6)
         self.assertIn("(iteration 2/3) at checkpoint 94 (timeout; disabled)", errors)
         self.assertNotIn("fictional-private-child-output", errors + output)
-        self.assertNotIn("PASS: 12 browser scenarios", output)
+        self.assertNotIn("PASS: 15 browser scenarios", output)
 
     def test_repeated_failure_does_not_publish_untrusted_child_details(self):
         code, children, output, errors = self.exercise(["--browser", "firefox", "--repeat", "2"], fail_at=1, malformed=True)
