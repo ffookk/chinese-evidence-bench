@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 from evidence_bench.workbench import create_server
 from fixtures import dataset, seed
 
-SCENARIOS = ("review-controls", "deleted-run", "failed-selection", "reload-failure")
+SCENARIOS = ("review-controls", "preview-layout", "deleted-run", "failed-selection", "reload-failure")
 
 
 def failure_checkpoint(output, browser, scenario):

@@ -138,6 +138,7 @@
     for (const [name, key] of [["Answer coverage", "answer_coverage"], ["Response coverage", "response_coverage"]]) {
       const card = node("div", undefined, "metric-card"); card.append(node("span", name), node("strong", fraction(metrics[key]))); cards.append(card);
     }
+    target.style.minHeight = "";
     target.replaceChildren(cards, table(["Quality axis", "Correct / scored", "Judgment coverage", "Unscored", "Not applicable"], axes.map(axis => [axisNames[axis], fraction(metrics[axis].score), fraction(metrics[axis].judgment_coverage), metrics[axis].counts.unscored, metrics[axis].counts.not_applicable])));
     target.append(node("p", Object.entries(metrics.outcome_counts).map(([key, value]) => label(key) + ": " + value).join(" · "), "muted small"));
     byId("metric-state").textContent = state; byId("metric-state").className = state === "Saved run" ? "tag" : "tag dirty";
@@ -147,7 +148,10 @@
     previewGeneration++; clearTimeout(previewTimer); controls(); clearComparison(); renderCases();
     if (!dirty()) { renderMetrics(view.metrics, "Saved run"); return; }
     byId("metric-state").textContent = "Unsaved draft"; byId("metric-state").className = "tag dirty";
-    byId("metrics").replaceChildren(node("p", "Draft changed. Waiting for authoritative Python validation…", "muted"));
+    const metrics = byId("metrics");
+    // Keep controls below the pending preview in place during pointer activation.
+    metrics.style.minHeight = metrics.getBoundingClientRect().height + "px";
+    metrics.replaceChildren(node("p", "Draft changed. Waiting for authoritative Python validation…", "muted"));
     const generation = previewGeneration;
     previewTimer = setTimeout(async () => {
       try {

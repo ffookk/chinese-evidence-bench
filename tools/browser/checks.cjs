@@ -162,6 +162,61 @@ async function reviewControls(context) {
   assert.deepEqual(await page.evaluate(() => ({local:localStorage.length, session:sessionStorage.length, cookies:document.cookie})), {local:0, session:0, cookies:""});
 }
 
+async function previewLayout(context) {
+  checkpoint = 20; // Hold the first real preview response before pointer activation.
+  const page = await openPage(context);
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  await page.route("**/api/preview", async route => {
+    const response = await route.fetch();
+    await gate;
+    await route.fulfill({response});
+  });
+  await page.locator(".metadata summary").click();
+  const pending = page.waitForRequest("**/api/preview");
+  await page.locator("#meta-model").fill("Fictional delayed validation");
+  await pending;
+  await page.locator("#case-search").fill("no-fictional-case");
+  assert.equal(await page.locator("#case-list button").count(), 0);
+  const reset = page.locator("#reset-filters");
+  await reset.scrollIntoViewIfNeeded();
+  const before = await reset.boundingBox();
+  assert(before);
+  checkpoint = 21; // A preview must not move the reset control between press and release.
+  await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2);
+  await page.mouse.down();
+  release();
+  await page.waitForFunction(() => document.getElementById("metric-state").textContent.includes("Validated draft"));
+  const after = await reset.boundingBox();
+  assert(after);
+  assert(Math.abs(after.y - before.y) < 1);
+  await page.mouse.up();
+  checkpoint = 22; // The real pointer click reset the filter and restored selectable cases.
+  assert.equal(await page.locator("#case-search").inputValue(), "");
+  assert.equal(await page.locator("#case-list button").count(), 20);
+  await page.locator("#case-list button").first().click();
+  assert.equal(await page.locator("#case-id").textContent(), "fictional-001");
+  checkpoint = 23; // Error and recovery do not permanently reserve stale height.
+  await page.locator("#meta-parameters").fill("[");
+  await page.locator("#metrics .notice.error").waitFor({state:"visible"});
+  await page.locator("#meta-parameters").fill("{}");
+  await page.waitForFunction(() => document.getElementById("metric-state").textContent.includes("Validated draft"));
+  const height = await page.locator("#metrics").evaluate(element => element.getBoundingClientRect().height);
+  for (let index = 0; index < 3; index++) {
+    await page.locator("#meta-model").fill("Fictional repeated validation " + index);
+    await page.waitForFunction(() => document.getElementById("metric-state").textContent.includes("Validated draft"));
+    assert.equal(await page.locator("#metrics").evaluate(element => element.style.minHeight), "");
+    assert(Math.abs(await page.locator("#metrics").evaluate(element => element.getBoundingClientRect().height) - height) < 1);
+  }
+  checkpoint = 24; // A later mobile layout computes its own height and remains unclipped.
+  await page.setViewportSize({width:390, height:844});
+  await page.locator("#meta-model").fill("Fictional mobile validation");
+  await page.waitForFunction(() => document.getElementById("metric-state").textContent.includes("Validated draft"));
+  assert.equal(await page.locator("#metrics").evaluate(element => element.style.minHeight), "");
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  assert.equal(await page.locator("#metrics table").count(), 1);
+}
+
 async function deletedRun(context) {
   checkpoint = 14; // Reload after another tab removes the selected run.
   const first = await openPage(context), second = await openPage(context);
@@ -232,7 +287,7 @@ async function reloadFailure(context) {
 async function main() {
   assert.match(origin, /^http:\/\/127\.0\.0\.1:[0-9]+$/);
   assert(engine === "chromium" || engine === "firefox");
-  assert(["review-controls", "deleted-run", "failed-selection", "reload-failure"].includes(scenario));
+  assert(["review-controls", "preview-layout", "deleted-run", "failed-selection", "reload-failure"].includes(scenario));
   let browser, context;
   const errors = [], external = [];
   try {
@@ -246,6 +301,7 @@ async function main() {
     });
     await context.routeWebSocket("**/*", socket => { external.push(true); socket.close(); });
     if (scenario === "review-controls") await reviewControls(context);
+    else if (scenario === "preview-layout") await previewLayout(context);
     else if (scenario === "deleted-run") await deletedRun(context);
     else if (scenario === "failed-selection") await failedSelection(context);
     else await reloadFailure(context);
