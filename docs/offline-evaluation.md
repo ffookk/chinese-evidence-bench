@@ -121,3 +121,8 @@ The private comparison artifact has schema version 1, type `paired_comparison`, 
 Aggregate rates may change because a different subset was scored. For example, two runs can both have 1/2 correct overall while their only jointly scored case improves from incorrect to correct. The paired improvement is then 1/1, while the aggregate rate delta is zero. Both describe their stated denominators; neither establishes general model improvement. Coverage and label changes must accompany any interpretation. Fixed strata are separate views, not a disjoint cross-product partition; do not sum counts across both stratification dimensions.
 
 No significance tests, confidence intervals, cost estimates, automatic winner selection, or causal claims are produced. Small, synthetic, selectively scored or differently judged samples do not support broad rankings. Case review states remain dataset declarations, and synthetic fixtures remain fictional even when their run metadata names a model. Actual retrieval experiments and model generation are still outside this implementation.
+
+
+## Compare several scored runs
+
+For an explicit baseline and up to 15 candidates, use `compare-cohort`. It reuses the paired scoring rules while adding per-axis intersections scored in every run, source-bound report verification, deterministic run ordering, and bounded private inputs/outputs. See the [cohort comparison guide](cohort-comparison.md) for denominator interpretation, CLI/API contracts and a fully fictional reproducible example.

@@ -420,6 +420,13 @@ def add_commands(subparsers, as_of_type):
     compare.add_argument("--left", type=Path, required=True)
     compare.add_argument("--right", type=Path, required=True)
     compare.add_argument("--output", type=Path, default=Path("private-output/comparison.json"))
+    cohort = subparsers.add_parser("compare-cohort", help="compare a bounded cohort with an explicit baseline and common scored cases")
+    cohort.add_argument("--dataset", action="append", type=Path, required=True)
+    cohort.add_argument("--baseline", type=Path, required=True, help="baseline scored artifact")
+    cohort.add_argument("--run", action="append", type=Path, required=True, help="candidate scored artifact; repeat for additional runs")
+    mode = cohort.add_mutually_exclusive_group()
+    mode.add_argument("--output", type=Path, help="new private report (default: private-output/cohort.json)")
+    mode.add_argument("--verify-report", type=Path, help="recompute and verify an existing report without writing")
 
 
 def run_command(args):
@@ -442,6 +449,9 @@ def run_command(args):
         elif args.command == "compare-runs":
             from .comparison import run_comparison
             run_comparison(args)
+        elif args.command == "compare-cohort":
+            from .cohort import run_cohort
+            run_cohort(args)
         else:
             raise EvaluationError("unsupported evaluation command.")
         return 0
