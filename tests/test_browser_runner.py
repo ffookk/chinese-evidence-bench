@@ -37,6 +37,93 @@ class BrowserDiagnosticsTests(unittest.TestCase):
             self.assertEqual(runner.failure_checkpoint(output, "firefox", "review-controls"), "")
 
 
+class BrowserStateDiagnosticsTests(unittest.TestCase):
+    def state(self, **changes):
+        value = {"target": "first-case", "case_buttons": 20, **{field: False for field in runner.STATE_FLAGS}}
+        value.update(changes)
+        return value
+
+    def payload(self, **changes):
+        value = {"browser": "firefox", "scenario": "review-controls", "passed": False,
+                 "checkpoint": 90, "error_kind": "timeout", "reason": "unknown", "state": self.state()}
+        value.update(changes)
+        return json.dumps(value)
+
+    def decode(self, text):
+        return runner.failure_checkpoint(text, "firefox", "review-controls")
+
+    def test_valid_state_reports_only_fixed_codes_and_bounded_flags(self):
+        for count in (0, 20, 63):
+            output = self.decode(self.payload(state=self.state(case_buttons=count, filters_clear=True)))
+            self.assertIn(f"case_buttons={count}", output)
+            self.assertIn("target=first-case", output)
+            self.assertIn("filters_clear=1", output)
+            self.assertIn("target_hit=0", output)
+            self.assertLess(len(output), 400)
+
+    def test_missing_state_remains_compatible_and_capture_failure_omits_state(self):
+        without = json.loads(self.payload())
+        without.pop("state")
+        expected = " at checkpoint 90 (timeout; unknown)"
+        self.assertEqual(self.decode(json.dumps(without)), expected)
+        self.assertEqual(self.decode(self.payload(state=None)), expected)
+
+    def test_untrusted_fields_values_and_types_reject_the_entire_diagnostic(self):
+        canary = "FictionalDiagnosticCanary-7391"
+        states = [self.state(extra=canary), self.state(target=canary), self.state(target="response"),
+                  self.state(case_buttons=-1), self.state(case_buttons=64), self.state(case_buttons=True),
+                  self.state(case_buttons=1.0), self.state(case_buttons=canary), [], canary]
+        for field in runner.STATE_FLAGS:
+            for value in (0, 1, None, "false", canary):
+                states.append(self.state(**{field: value}))
+        incomplete = self.state()
+        incomplete.pop("target_hit")
+        states.append(incomplete)
+        for state in states:
+            with self.subTest(state_type=type(state).__name__):
+                output = self.decode(self.payload(state=state))
+                self.assertEqual(output, "")
+                self.assertNotIn(canary, output)
+
+    def test_state_cannot_be_attached_to_unrelated_scenario_or_target(self):
+        for scenario in ("deleted-run", "failed-selection", "reload-failure", "diagnostic-privacy"):
+            value = json.loads(self.payload(scenario=scenario))
+            self.assertEqual(runner.failure_checkpoint(json.dumps(value), "firefox", scenario), "")
+        self.assertEqual(self.decode(self.payload(checkpoint=94)), "")
+        value = json.loads(self.payload(scenario="preview-layout", checkpoint=21, state=self.state(target="reset-filters")))
+        self.assertIn("target=reset-filters", runner.failure_checkpoint(json.dumps(value), "firefox", "preview-layout"))
+
+    def test_duplicate_oversized_and_deep_documents_are_rejected(self):
+        document = self.payload()
+        nested_duplicate = document.replace('"case_buttons": 20', '"case_buttons": 0, "case_buttons": 20')
+        top_duplicate = document.replace('"checkpoint": 90', '"checkpoint": 91, "checkpoint": 90')
+        for text in (nested_duplicate, top_duplicate, document + " " * 4096, "[" * 1500 + "]" * 1500, None, b"{}"):
+            self.assertEqual(self.decode(text), "")
+
+    def test_capture_deadline_and_page_errors_do_not_return_raw_diagnostics(self):
+        import shutil
+        import subprocess
+
+        node = shutil.which("node")
+        self.assertIsNotNone(node, "Browser diagnostic tests require Node.js; no checks are skipped.")
+        script = """
+const {captureState} = require(process.argv[1]);
+(async () => {
+  const canary = "FictionalDiagnosticCanary-7391";
+  const rejected = await captureState({isClosed: () => false, evaluate: async () => { throw new Error(canary); }}, 90);
+  const missing = await captureState(null, 90);
+  const closed = await captureState({isClosed: () => true}, 90);
+  const unavailable = await captureState({isClosed: () => false, evaluate: () => new Promise(() => {})}, 90);
+  process.stdout.write(JSON.stringify({rejected, missing, closed, unavailable}));
+})().catch(() => { process.exitCode = 1; });
+"""
+        result = subprocess.run([node, "-e", script, str(TOOLS / "diagnostics.cjs")], capture_output=True, text=True, timeout=5)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stderr, "")
+        self.assertEqual(json.loads(result.stdout), {"rejected": None, "missing": None, "closed": None, "unavailable": None})
+        self.assertNotIn("FictionalDiagnosticCanary-7391", result.stdout)
+
+
 class BrowserRepetitionTests(unittest.TestCase):
     def exercise(self, arguments, fail_at=None, malformed=False):
         import contextlib
@@ -98,16 +185,16 @@ class BrowserRepetitionTests(unittest.TestCase):
         self.assertEqual(children, [("firefox", scenario) for _ in range(2) for scenario in runner.SCENARIOS])
         self.assertIn("(iteration 1/2)", output)
         self.assertIn("(iteration 2/2)", output)
-        self.assertIn("PASS: 10 browser scenarios", output)
+        self.assertIn("PASS: 12 browser scenarios", output)
         self.assertEqual(errors, "")
 
     def test_first_failure_stops_repetitions_and_preserves_fixed_diagnostics(self):
-        code, children, output, errors = self.exercise(["--browser", "firefox", "--repeat", "3"], fail_at=6)
+        code, children, output, errors = self.exercise(["--browser", "firefox", "--repeat", "3"], fail_at=7)
         self.assertEqual(code, 1)
-        self.assertEqual(len(children), 6)
+        self.assertEqual(len(children), 7)
         self.assertIn("(iteration 2/3) at checkpoint 94 (timeout; disabled)", errors)
         self.assertNotIn("fictional-private-child-output", errors + output)
-        self.assertNotIn("PASS: 15 browser scenarios", output)
+        self.assertNotIn("PASS: 18 browser scenarios", output)
 
     def test_repeated_failure_does_not_publish_untrusted_child_details(self):
         code, children, output, errors = self.exercise(["--browser", "firefox", "--repeat", "2"], fail_at=1, malformed=True)

@@ -1,7 +1,9 @@
 "use strict";
 const assert = require("node:assert/strict");
 const {chromium, firefox} = require("playwright");
+const {captureState} = require("./diagnostics.cjs");
 const [origin, engine, scenario] = process.argv.slice(2);
+let diagnosticPage = null, failureState = null;
 let checkpoint = 0; // Browser startup.
 
 function failureReason(error) {
@@ -51,6 +53,7 @@ async function readDownload(page, id) {
 async function reviewControls(context) {
   checkpoint = 1; // Initial state and filter reset.
   const page = await context.newPage();
+  diagnosticPage = page;
   const checks = [];
   const el=id=>page.locator('#'+id), text=id=>el(id).textContent();
   const count=()=>page.locator('#case-list button').count();
@@ -165,6 +168,7 @@ async function reviewControls(context) {
 async function previewLayout(context) {
   checkpoint = 20; // Hold the first real preview response before pointer activation.
   const page = await openPage(context);
+  diagnosticPage = page;
   let release;
   const gate = new Promise(resolve => { release = resolve; });
   await page.route("**/api/preview", async route => {
@@ -215,6 +219,48 @@ async function previewLayout(context) {
   assert.equal(await page.locator("#metrics").evaluate(element => element.style.minHeight), "");
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.equal(await page.locator("#metrics table").count(), 1);
+}
+
+async function diagnosticPrivacy(context) {
+  checkpoint = 25; // Only fixed state survives supplied text and attributes.
+  const page = await openPage(context);
+  const canary = "FictionalDiagnosticCanary-7391";
+  await page.evaluate(value => {
+    document.getElementById("case-question").textContent = value;
+    document.getElementById("response").value = value;
+    document.getElementById("case-search").value = value;
+    document.querySelector("#case-list button").setAttribute("title", value);
+  }, canary);
+  const state = await captureState(page, 90);
+  assert(state);
+  assert.equal(state.target, "first-case");
+  assert.equal(state.case_buttons, 20);
+  assert.equal(state.filters_clear, false);
+  assert.equal(state.first_selected, true);
+  assert.equal(JSON.stringify(state).includes(canary), false);
+  checkpoint = 26; // Counts saturate, and hidden/disabled/missing targets stay boolean.
+  await page.evaluate(value => {
+    const list = document.getElementById("case-list");
+    for (let index = 0; index < 70; index++) {
+      const button = document.createElement("button"); button.textContent = value; list.append(button);
+    }
+    list.firstElementChild.disabled = true;
+    list.firstElementChild.style.display = "none";
+  }, canary);
+  const hidden = await captureState(page, 90);
+  assert.equal(hidden.case_buttons, 63);
+  assert.equal(hidden.target_enabled, false);
+  assert.equal(hidden.target_visible, false);
+  assert.equal(hidden.target_in_view, false);
+  assert.equal(hidden.target_hit, false);
+  assert.equal(JSON.stringify(hidden).includes(canary), false);
+  await page.locator("#case-list").evaluate(element => element.replaceChildren());
+  const missing = await captureState(page, 90);
+  assert.equal(missing.case_buttons, 0);
+  assert.equal(missing.target_present, false);
+  assert.equal(missing.first_selected, false);
+  await page.close();
+  assert.equal(await captureState(page, 90), null);
 }
 
 async function deletedRun(context) {
@@ -287,7 +333,7 @@ async function reloadFailure(context) {
 async function main() {
   assert.match(origin, /^http:\/\/127\.0\.0\.1:[0-9]+$/);
   assert(engine === "chromium" || engine === "firefox");
-  assert(["review-controls", "preview-layout", "deleted-run", "failed-selection", "reload-failure"].includes(scenario));
+  assert(["review-controls", "preview-layout", "diagnostic-privacy", "deleted-run", "failed-selection", "reload-failure"].includes(scenario));
   let browser, context;
   const errors = [], external = [];
   try {
@@ -302,6 +348,7 @@ async function main() {
     await context.routeWebSocket("**/*", socket => { external.push(true); socket.close(); });
     if (scenario === "review-controls") await reviewControls(context);
     else if (scenario === "preview-layout") await previewLayout(context);
+    else if (scenario === "diagnostic-privacy") await diagnosticPrivacy(context);
     else if (scenario === "deleted-run") await deletedRun(context);
     else if (scenario === "failed-selection") await failedSelection(context);
     else await reloadFailure(context);
@@ -309,6 +356,9 @@ async function main() {
     assert.equal(external.length, 0);
     assert.equal(errors.length, 0);
     console.log(JSON.stringify({browser:engine, scenario, passed:true, external_requests:0, page_errors:0}));
+  } catch (error) {
+    if (scenario === "review-controls" || scenario === "preview-layout") failureState = await captureState(diagnosticPage, checkpoint);
+    throw error;
   } finally {
     if (context) await context.close();
     if (browser) await browser.close();
@@ -316,6 +366,6 @@ async function main() {
 }
 main().catch(error => {
   const errorKind = error?.name === "AssertionError" ? "assertion" : error?.name === "TimeoutError" ? "timeout" : "other";
-  console.log(JSON.stringify({browser:engine, scenario, passed:false, checkpoint, error_kind:errorKind, reason:failureReason(error)}));
+  console.log(JSON.stringify({browser:engine, scenario, passed:false, checkpoint, error_kind:errorKind, reason:failureReason(error), state:failureState}));
   process.exitCode = 1;
 });
