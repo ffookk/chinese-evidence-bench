@@ -92,6 +92,32 @@ def _comparison(left, right):
     }
 
 
+def declared_setup_changes(dataset, before_run, after_run):
+    """Compare declarations without copying prompts, parameters, or labels."""
+    left_records, right_records = before_run["records"], after_run["records"]
+    prompt_changes = sum(
+        (old["prompt_override"] if old["prompt_override"] is not None else case["question"])
+        != (new["prompt_override"] if new["prompt_override"] is not None else case["question"])
+        for case, old, new in zip(dataset.cases, left_records, right_records)
+    )
+    return {
+        "model_label_changed": before_run["generation"]["model_label"] != after_run["generation"]["model_label"],
+        "parameters_changed": ev.canonical(before_run["generation"]["parameters"]) != ev.canonical(after_run["generation"]["parameters"]),
+        "review_method_changed": before_run["review"]["method"] != after_run["review"]["method"],
+        "reviewer_label_changed": before_run["review"]["reviewer_label"] != after_run["review"]["reviewer_label"],
+        "created_at_changed": before_run["created_at"] != after_run["created_at"],
+        "effective_prompts_changed": prompt_changes,
+    }
+
+
+def applicability_changes(left_records, right_records):
+    """Count changes in the declared applicability labels for each axis."""
+    return {axis: {
+        "moved_from_not_applicable": sum(old["judgments"][axis] == "not_applicable" and new["judgments"][axis] != "not_applicable" for old, new in zip(left_records, right_records)),
+        "moved_to_not_applicable": sum(old["judgments"][axis] != "not_applicable" and new["judgments"][axis] == "not_applicable" for old, new in zip(left_records, right_records)),
+    } for axis in ev.AXES}
+
+
 def compare_runs(dataset, left, right):
     """Recompute both artifacts before matching their complete, ID-sorted records."""
     before = ev.verify_scored(dataset, left)
@@ -109,24 +135,6 @@ def compare_runs(dataset, left, right):
         "right_outcome": new["outcome"],
         "judgments": {axis: {"left": old["judgments"][axis], "right": new["judgments"][axis], "transition": _transition(old["judgments"][axis], new["judgments"][axis])} for axis in ev.AXES},
     } for old, new in zip(left_records, right_records)]
-    prompt_changes = sum(
-        (old["prompt_override"] if old["prompt_override"] is not None else case["question"])
-        != (new["prompt_override"] if new["prompt_override"] is not None else case["question"])
-        for case, old, new in zip(dataset.cases, left_records, right_records)
-    )
-    before_run, after_run = before["run"], after["run"]
-    setup_changes = {
-        "model_label_changed": before_run["generation"]["model_label"] != after_run["generation"]["model_label"],
-        "parameters_changed": ev.canonical(before_run["generation"]["parameters"]) != ev.canonical(after_run["generation"]["parameters"]),
-        "review_method_changed": before_run["review"]["method"] != after_run["review"]["method"],
-        "reviewer_label_changed": before_run["review"]["reviewer_label"] != after_run["review"]["reviewer_label"],
-        "created_at_changed": before_run["created_at"] != after_run["created_at"],
-        "effective_prompts_changed": prompt_changes,
-    }
-    applicability_label_changes = {axis: {
-        "moved_from_not_applicable": sum(old["judgments"][axis] == "not_applicable" and new["judgments"][axis] != "not_applicable" for old, new in zip(left_records, right_records)),
-        "moved_to_not_applicable": sum(old["judgments"][axis] != "not_applicable" and new["judgments"][axis] == "not_applicable" for old, new in zip(left_records, right_records)),
-    } for axis in ev.AXES}
     synthetic = sum(case["synthetic"] for case in dataset.cases)
     reviewed = sum(case["review_status"] == "reviewed" for case in dataset.cases)
     return {
@@ -141,8 +149,8 @@ def compare_runs(dataset, left, right):
         "left_run_id": before["run"]["run_id"],
         "right_run_id": after["run"]["run_id"],
         "sample_scope": {"cases": len(dataset.cases), "synthetic": synthetic, "real": len(dataset.cases) - synthetic, "reviewed": reviewed, "pending": len(dataset.cases) - reviewed},
-        "declared_setup_changes": setup_changes,
-        "applicability_label_changes": applicability_label_changes,
+        "declared_setup_changes": declared_setup_changes(dataset, before["run"], after["run"]),
+        "applicability_label_changes": applicability_changes(left_records, right_records),
         "aggregate": _comparison(left_records, right_records),
         "strata": {
             "answerability": {state: group(lambda case, state=state: case["answerability"] == state) for state in sorted(ANSWERABILITY)},
