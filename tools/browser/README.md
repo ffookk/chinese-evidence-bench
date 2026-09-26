@@ -15,6 +15,8 @@ python3 tools/browser/run.py
 
 On a supported Linux development machine, the Playwright browser installation may also need `--with-deps` to install system libraries. Dependency and browser installation downloads files; the regression scenarios themselves allow only their ephemeral numeric loopback origin and reject external page requests. The runner fails if Node, a requested browser or a required scenario is unavailable; it does not silently skip coverage. To run one installed engine, use `python3 tools/browser/run.py --browser firefox` or `--browser chromium`.
 
+For intermittent failures, `python3 tools/browser/run.py --browser firefox --repeat 5` runs every scenario five times, each with a fresh server, session and browser. `--repeat` accepts integers from 1 through 20 and defaults to 1. It stops immediately at the first failed scenario: repetitions are additional independent checks, not retries that turn a failure into a pass. Repeated output adds only an iteration number to the fixed diagnostics. A passing sequence does not establish that an earlier intermittent cause was repaired.
+
 The package lock pins Playwright 1.63.0 and its development dependency. The fixture generator derives 63 explicitly fictional cases from the tracked synthetic examples and removes its temporary JSON input after validation. Each scenario starts a fresh in-memory server with two declared fictional runs. It never reads user datasets or an existing workbench session.
 
 Each engine checks:
@@ -29,6 +31,6 @@ Downloads use the browser's temporary test context and are removed when it close
 
 ## Continuous integration
 
-The unit-test matrix runs Ubuntu with Python 3.10, 3.11, 3.12, 3.13 and 3.14, plus macOS with Python 3.14. Every entry explicitly installs Node.js 24 and fails if any Python test is skipped. A separate Ubuntu/Python 3.11/Node.js 24 matrix runs the same scenarios in Playwright's Chromium and Firefox builds. These are POSIX targets; Windows is not in this matrix.
+The unit-test matrix runs Ubuntu with Python 3.10, 3.11, 3.12, 3.13 and 3.14, plus macOS with Python 3.14. Every entry explicitly installs Node.js 24 and fails if any Python test is skipped. A separate Ubuntu/Python 3.11/Node.js 24 matrix runs the same scenarios in Playwright's Chromium and Firefox builds. Firefox runs five independent iterations per scenario to increase the opportunity to capture the unresolved intermittent navigation timeout; Chromium runs one. These are POSIX targets; Windows is not in this matrix.
 
 The always-running `validate` job requires both matrix jobs to report success, retaining the existing required-check name. CI also preserves the current tracked English guard, privacy scan including reachable history, documented dataset checks and reviewed-real-case gate. Coverage is defined by this workflow; a change is verified on those CI targets only after its corresponding run succeeds.

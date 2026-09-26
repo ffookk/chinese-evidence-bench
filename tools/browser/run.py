@@ -35,9 +35,23 @@ def failure_checkpoint(output, browser, scenario):
     return f" at checkpoint {number} ({detail})"
 
 
+def repeat_count(value):
+    """Bound repeated diagnostics without echoing a supplied argument."""
+    try:
+        if not value.isascii() or not value.isdecimal():
+            raise ValueError
+        count = int(value)
+        if not 1 <= count <= 20:
+            raise ValueError
+    except ValueError:
+        raise argparse.ArgumentTypeError("repeat must be an integer from 1 through 20") from None
+    return count
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--browser", action="append", choices=("chromium", "firefox"), help="run one engine; default: both required engines")
+    parser.add_argument("--repeat", type=repeat_count, default=1, metavar="1..20", help="repeat every requested scenario with fresh state; stop at the first failure")
     args = parser.parse_args()
     node = shutil.which("node")
     if node is None:
@@ -50,28 +64,30 @@ def main():
     data = dataset()
     passed = 0
     for browser in dict.fromkeys(args.browser or ("chromium", "firefox")):
-        for scenario in SCENARIOS:
-            server = create_server(data)
-            thread = None
-            try:
-                seed(server.session)
-                thread = threading.Thread(target=server.serve_forever, daemon=True)
-                thread.start()
-                result = subprocess.run([node, str(Path(__file__).with_name("checks.cjs")), server.origin, browser, scenario], capture_output=True, text=True, timeout=120)
-                if result.returncode:
-                    location = failure_checkpoint(result.stdout, browser, scenario)
-                    print(f"FAIL: {browser} / {scenario}{location}. A required browser check did not complete; no checks were skipped.", file=sys.stderr)
-                    return 1
-                summary = json.loads(result.stdout)
-                if summary != {"browser": browser, "scenario": scenario, "passed": True, "external_requests": 0, "page_errors": 0}:
-                    raise ValueError
-                print(f"PASS: {browser} / {scenario}; no external page requests or page errors.")
-                passed += 1
-            finally:
-                if thread is not None:
-                    server.shutdown()
-                    thread.join(timeout=10)
-                server.server_close()
+        for iteration in range(1, args.repeat + 1):
+            iteration_label = "" if args.repeat == 1 else f" (iteration {iteration}/{args.repeat})"
+            for scenario in SCENARIOS:
+                server = create_server(data)
+                thread = None
+                try:
+                    seed(server.session)
+                    thread = threading.Thread(target=server.serve_forever, daemon=True)
+                    thread.start()
+                    result = subprocess.run([node, str(Path(__file__).with_name("checks.cjs")), server.origin, browser, scenario], capture_output=True, text=True, timeout=120)
+                    if result.returncode:
+                        location = failure_checkpoint(result.stdout, browser, scenario)
+                        print(f"FAIL: {browser} / {scenario}{iteration_label}{location}. A required browser check did not complete; no checks were skipped.", file=sys.stderr)
+                        return 1
+                    summary = json.loads(result.stdout)
+                    if summary != {"browser": browser, "scenario": scenario, "passed": True, "external_requests": 0, "page_errors": 0}:
+                        raise ValueError
+                    print(f"PASS: {browser} / {scenario}{iteration_label}; no external page requests or page errors.")
+                    passed += 1
+                finally:
+                    if thread is not None:
+                        server.shutdown()
+                        thread.join(timeout=10)
+                    server.server_close()
     print(f"PASS: {passed} browser scenarios; fictional data only, no artifacts uploaded.")
     return 0
 

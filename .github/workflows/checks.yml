@@ -79,7 +79,14 @@ jobs:
         working-directory: tools/browser
         run: npx --no-install playwright install --with-deps ${{ matrix.browser }}
       - name: Run fictional browser regressions
-        run: python tools/browser/run.py --browser ${{ matrix.browser }}
+        env:
+          TEST_BROWSER: ${{ matrix.browser }}
+        run: |
+          if [ "$TEST_BROWSER" = firefox ]; then
+            python tools/browser/run.py --browser "$TEST_BROWSER" --repeat 5
+          else
+            python tools/browser/run.py --browser "$TEST_BROWSER"
+          fi
 
   validate:
     name: validate
